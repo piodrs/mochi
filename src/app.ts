@@ -1,3 +1,4 @@
+import "@/database/index"
 import { commandkit } from 'commandkit';
 import { Client } from 'discord.js';
 
