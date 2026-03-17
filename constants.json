@@ -1,44 +1,44 @@
 {
-  "guild": {
-    "channels": {
-      "welcome": "1473692917226016942",
-      "bump": "1450213745677828116",
-      "rules": "1424109744620306552",
-      "bounjour": "1424109744620306555"
-    },
-    "roles": {
-      "pingBump": "1434987102751424602"
-    },
-    "bumps": {
-      "disboard": {
-        "botId": "302050872383242240",
-        "cooldownHours": 2,
-        "label": "Disboard"
-      },
-      "discadia": {
-        "botId": "1222548162741538938",
-        "cooldownHours": 24,
-        "label": "Discadia"
-      }
-    }
-  },
+	"guild": {
+		"channels": {
+			"welcome": "1473692917226016942",
+			"bump": "1450213745677828116",
+			"rules": "1424109744620306552",
+			"bounjour": "1424109744620306555"
+		},
+		"roles": {
+			"pingBump": "1434987102751424602"
+		},
+		"bumps": {
+			"disboard": {
+				"botId": "302050872383242240",
+				"cooldownHours": 2,
+				"label": "Disboard"
+			},
+			"discadia": {
+				"botId": "1222548162741538938",
+				"cooldownHours": 24,
+				"label": "Discadia"
+			}
+		}
+	},
 
-  "colors": {
-    "brand": "#A3003C",
-    "highlight": "#FF8FA3",
-    "background": "#1A0A0F",
-    "surface": "#2A0F18",
-    "text": "#FCE7EC",
-    "muted": "#D94F70",
-    "success": "#D94F70",
-    "error": "#8B1E3F",
-    "warning": "#FF6B81",
-    "info": "#C2185B"
-  },
-  "emojis": {
-    "success": "1478832815637528748",
-    "error": "1478832750315438131",
-    "next": "1483490349623152761",
-    "keqingHeart": "1483490690112557126"
-  }
+	"colors": {
+		"brand": "#A3003C",
+		"highlight": "#FF8FA3",
+		"background": "#1A0A0F",
+		"surface": "#2A0F18",
+		"text": "#FCE7EC",
+		"muted": "#D94F70",
+		"success": "#D94F70",
+		"error": "#8B1E3F",
+		"warning": "#FF6B81",
+		"info": "#C2185B"
+	},
+	"emojis": {
+		"success": "1478832815637528748",
+		"error": "1478832750315438131",
+		"next": "1483490349623152761",
+		"keqingHeart": "1483490690112557126"
+	}
 }

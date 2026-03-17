@@ -1,14 +1,14 @@
-import "./database/index"
-import "./constants"
-import { commandkit } from 'commandkit';
-import { Client } from 'discord.js';
+import "./database/index";
+import "./constants";
+import { commandkit } from "commandkit";
+import { Client } from "discord.js";
 
 const client = new Client({
-  intents: ['Guilds', 'GuildMembers', 'GuildMessages', 'MessageContent'],
+	intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent"],
 });
 
 commandkit.setPrefixResolver(async () => {
-  return ["?", "-"];
+	return ["?", "-"];
 });
 
 export default client;

@@ -1,26 +1,32 @@
 {
-  "name": "commandkit-basic-ts",
-  "description": "A CommandKit project using TypeScript",
-  "version": "0.1.0",
-  "type": "module",
-  "private": true,
-  "main": "dist/index.js",
-  "scripts": {
-    "dev": "commandkit dev",
-    "build": "commandkit build",
-    "start": "commandkit start"
-  },
-  "devDependencies": {
-    "@types/node": "^25.5.0",
-    "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@commandkit/tasks": "^1.2.1",
-    "commandkit": "^1.2.1",
-    "discord.js": "^14.25.1",
-    "firebase": "^12.10.0",
-    "firebase-admin": "^13.7.0",
-    "typesaurus": "^10.7.0",
-    "zod": "^4.3.6"
-  }
+	"name": "commandkit-basic-ts",
+	"description": "A CommandKit project using TypeScript",
+	"version": "0.1.0",
+	"type": "module",
+	"private": true,
+	"main": "dist/index.js",
+	"scripts": {
+		"dev": "commandkit dev",
+		"build": "commandkit build",
+		"start": "commandkit start",
+		"lint": "biome lint --write",
+		"format": "biome format --write",
+		"validate": "biome check .",
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.7",
+		"@types/node": "^25.5.0",
+		"husky": "^9.1.7",
+		"typescript": "^5.9.3"
+	},
+	"dependencies": {
+		"@commandkit/tasks": "^1.2.1",
+		"commandkit": "^1.2.1",
+		"discord.js": "^14.25.1",
+		"firebase": "^12.10.0",
+		"firebase-admin": "^13.7.0",
+		"typesaurus": "^10.7.0",
+		"zod": "^4.3.6"
+	}
 }
