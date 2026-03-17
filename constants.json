@@ -1,0 +1,18 @@
+{
+  "colors": {
+    "brand": "#A3003C",
+    "highlight": "#FF8FA3",
+    "background": "#1A0A0F",
+    "surface": "#2A0F18",
+    "text": "#FCE7EC",
+    "muted": "#D94F70",
+    "success": "#D94F70",
+    "error": "#8B1E3F",
+    "warning": "#FF6B81",
+    "info": "#C2185B"
+  },
+  "emojis": {
+    "success": "1478832815637528748",
+    "error": "1478832750315438131"
+  }
+}

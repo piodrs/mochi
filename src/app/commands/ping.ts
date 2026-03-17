@@ -9,14 +9,14 @@ export const command: CommandData = {
 
 export const chatInput: ChatInputCommand = async ({ interaction, client }) => {
   const latency = (client.ws.ping ?? -1).toString();
-  const response = `Pong! Latência: ${latency}ms`;
+  const response = `${emojis.success} Pong! Latência: ${latency}ms`;
 
   await interaction.reply(response);
 };
 
 export const message: MessageCommand = async ({ message, client }) => {
   const latency = (client.ws.ping ?? -1).toString();
-  const response = `Pong! Latência: ${latency}ms`;
+  const response = `${emojis.success} Pong! Latência: ${latency}ms`;
 
   await message.reply(response);
 };
