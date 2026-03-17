@@ -1,3 +1,4 @@
+import { res } from '@/utils/res';
 import type { ChatInputCommand, MessageCommand, CommandData } from 'commandkit';
 import { InteractionContextType } from 'discord.js';
 
@@ -11,12 +12,12 @@ export const chatInput: ChatInputCommand = async ({ interaction, client }) => {
   const latency = (client.ws.ping ?? -1).toString();
   const response = `${emojis.success} Pong! Latência: ${latency}ms`;
 
-  await interaction.reply(response);
+  await interaction.reply(res.success(response));
 };
 
 export const message: MessageCommand = async ({ message, client }) => {
   const latency = (client.ws.ping ?? -1).toString();
   const response = `${emojis.success} Pong! Latência: ${latency}ms`;
 
-  await message.reply(response);
+  await message.reply(res.success(response));
 };
