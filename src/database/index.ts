@@ -3,7 +3,6 @@ import { Logger } from "commandkit";
 import { cert, getApp, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { env } from "@/env";
-import { db, type DatabaseSchema, type MemberSchema } from "@/database/schema";
 
 function readServiceAccount() {
   const fileContent = fs.readFileSync(env.FIREBASE_PATH, { encoding: "utf-8" });
@@ -28,6 +27,3 @@ try {
   Logger.error(error);
   process.exit(1);
 }
-
-export { db };
-export type { DatabaseSchema, MemberSchema };

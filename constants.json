@@ -2,8 +2,24 @@
   "guild": {
     "channels": {
       "welcome": "1473692917226016942",
+      "bump": "1450213745677828116",
       "rules": "1424109744620306552",
       "bounjour": "1424109744620306555"
+    },
+    "roles": {
+      "pingBump": "1434987102751424602"
+    },
+    "bumps": {
+      "disboard": {
+        "botId": "302050872383242240",
+        "cooldownHours": 2,
+        "label": "Disboard"
+      },
+      "discadia": {
+        "botId": "1222548162741538938",
+        "cooldownHours": 24,
+        "label": "Discadia"
+      }
     }
   },
 
