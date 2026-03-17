@@ -16,6 +16,11 @@ declare global {
     var emojis: Readonly<Emojis>;
 }
 
+function deepFreeze<T extends object>(obj: T): Readonly<T> {
+    Object.values(obj).filter(v => typeof v === "object" && v !== null).forEach(deepFreeze);
+    return Object.freeze(obj);
+}
+
 function parseColor(hex: string): number {
     return Number.parseInt(hex.replace("#", ""), 16);
 }
@@ -28,21 +33,14 @@ const colors = Object.freeze(
 
 globalThis.emojis = Object.freeze(
     Object.fromEntries(
-        Object.entries(constantsJson.emojis).map(([name, id]) => [
-            name,
-            `<:${name}:${id}>`,
-        ]),
+        Object.entries(constantsJson.emojis).map(([name, id]) => [name, `<:${name}:${id}>`]),
     ) as Emojis,
 );
 
-globalThis.constants = Object.freeze({
+globalThis.constants = deepFreeze({
     ...constantsJson,
-    guild: Object.freeze({
-        ...constantsJson.guild,
-        channels: Object.freeze({ ...constantsJson.guild.channels }),
-    }),
     colors,
     emojis: globalThis.emojis,
-});
+}) as Constants;
 
 export { };
