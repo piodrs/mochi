@@ -34,3 +34,5 @@ lerna-debug.log*
 # other
 **/*.DS_Store
 .temp-example
+
+firebase.json

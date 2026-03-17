@@ -17,7 +17,9 @@
   "dependencies": {
     "commandkit": "^1.2.1",
     "discord.js": "^14.25.1",
-    "mongoose": "^9.3.0",
+    "firebase": "^12.10.0",
+    "firebase-admin": "^13.7.0",
+    "typesaurus": "^10.7.0",
     "zod": "^4.3.6"
   }
 }
