@@ -36,3 +36,4 @@ lerna-debug.log*
 .temp-example
 
 firebase.json
+tasks.db
