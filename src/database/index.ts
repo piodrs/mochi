@@ -1,11 +1,33 @@
-import { env } from "@/env";
+import fs from "node:fs";
 import { Logger } from "commandkit";
-import mongoose from "mongoose";
+import { cert, getApp, getApps, initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { env } from "@/env";
+import { db, type DatabaseSchema, type MemberSchema } from "@/database/schema";
+
+function readServiceAccount() {
+  const fileContent = fs.readFileSync(env.FIREBASE_PATH, { encoding: "utf-8" });
+  return JSON.parse(fileContent);
+}
+
+function ensureFirebaseApp() {
+  const existing = getApps()[0];
+
+  if (existing) return getApp();
+
+  return initializeApp({
+    credential: cert(readServiceAccount()),
+  });
+}
 
 try {
-    await mongoose.connect(env.MONGO_URI, { dbName: env.DATABASE_NAME })
-    Logger.info("🍃 Mongo connected succesfuly!")
+  const app = ensureFirebaseApp();
+  getFirestore(app);
+  Logger.info("Firestore initialized successfully");
 } catch (error) {
-    Logger.error(error);
-    process.exit(1)
+  Logger.error(error);
+  process.exit(1);
 }
+
+export { db };
+export type { DatabaseSchema, MemberSchema };

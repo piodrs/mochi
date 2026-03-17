@@ -1,8 +1,10 @@
+import { loadEnvFile } from "node:process";
 import z from "zod";
 
+loadEnvFile();
+
 const envSchema = z.object({
-  MONGO_URI: z.string().min(1, "MONGO_URI is required"),
-  DATABASE_NAME: z.string().optional().default("mochi"),
+  FIREBASE_PATH: z.string().min(1, "FIREBASE_PATH is required"),
 });
 
 const validateEnv = () => {
