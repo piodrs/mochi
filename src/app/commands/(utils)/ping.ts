@@ -1,4 +1,9 @@
-import type { ChatInputCommand, CommandData, MessageCommand } from "commandkit";
+import type {
+	ChatInputCommand,
+	CommandData,
+	CommandMetadata,
+	MessageCommand,
+} from "commandkit";
 import { InteractionContextType } from "discord.js";
 import { res } from "@/utils/res";
 
@@ -6,6 +11,10 @@ export const command: CommandData = {
 	name: "ping",
 	description: "Comando para checar se estou online.",
 	contexts: [InteractionContextType.Guild],
+};
+
+export const metadata: CommandMetadata = {
+	aliases: ["pong", "ws"],
 };
 
 export const chatInput: ChatInputCommand = async ({ interaction, client }) => {
