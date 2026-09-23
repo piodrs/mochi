@@ -10,8 +10,7 @@ typedef struct {
 	Frame *tree;
 	Frame *frame;
 	Time time;
-	int running;
-	int restart;
+	int status;
 } Session;
 
 extern Session fish;

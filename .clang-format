@@ -7,3 +7,4 @@ BreakBeforeBraces: Linux
 SpaceBeforeParens: ControlStatements
 PointerAlignment: Right
 SortIncludes: false
+AllowShortFunctionsOnASingleLine: None

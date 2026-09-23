@@ -6,6 +6,7 @@
 int x11_open(void);
 void x11_trap(void);
 int x11_untrap(void);
+int x11_hidden(Window win);
 void x11_state(Window win, long value);
 void x11_protocol(Window win, Atom atom);
 int x11_iconic(XClientMessageEvent *event);

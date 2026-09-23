@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>
@@ -22,7 +21,10 @@ typedef struct {
 
 static const char *filename;
 
-void config_path(const char *path) { filename = path; }
+void config_path(const char *path)
+{
+	filename = path;
+}
 
 static char *skip(char *text)
 {
@@ -128,7 +130,7 @@ static int report(const char *path, unsigned long line, const char *error)
 {
 	char text[MESSAGE_MAX];
 
-	snprintf(text, sizeof text, "%s:%lu: %s", path, line, error);
+	sprintf(text, "%.1023s:%lu: %.900s", path, line, error);
 	fprintf(stderr, APP_NAME ": %s\n", text);
 	input_message(text);
 	return FALSE;
@@ -145,7 +147,6 @@ int config_load(int startup)
 	char text[KEY_NAME_MAX + 64];
 	unsigned long number;
 	size_t i;
-	int n;
 	int ok;
 
 	path = filename;
@@ -153,9 +154,9 @@ int config_load(int startup)
 		home = getenv("HOME");
 		if (!home || !*home)
 			return report("~/.fishrc", 0, "HOME is not set");
-		n = snprintf(name, sizeof name, "%s/.fishrc", home);
-		if (n < 0 || (size_t)n >= sizeof name)
+		if (strlen(home) > sizeof name - sizeof "/.fishrc")
 			return report("~/.fishrc", 0, "path too long");
+		sprintf(name, "%s/.fishrc", home);
 		path = name;
 	}
 	file = fopen(path, "r");
@@ -183,8 +184,7 @@ int config_load(int startup)
 		       "prefix unavailable; previous bindings retained");
 	else {
 		ok = TRUE;
-		snprintf(text, sizeof text, "Prefix %s, then ? for help",
-			 keys_name());
+		sprintf(text, "Prefix %s", keys_name());
 		input_message(startup ? text
 				      : "Configuration reloaded (startup "
 					"programs skipped)");

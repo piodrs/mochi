@@ -21,5 +21,5 @@ int main(int argc, char **argv)
 		perror(APP_NAME ": restart");
 		return 1;
 	}
-	return 0;
+	return status;
 }

@@ -2,7 +2,10 @@
 #include "defs.h"
 #include "frame.h"
 
-Frame *frame_create(void) { return calloc(1, sizeof(Frame)); }
+Frame *frame_create(void)
+{
+	return calloc(1, sizeof(Frame));
+}
 
 void frame_free(Frame *fp)
 {
@@ -91,6 +94,10 @@ Frame *frame_remove(Frame **root, Frame *fp)
 	sp = pp->first == fp ? pp->second : pp->first;
 	gp = pp->parent;
 	sp->parent = gp;
+	sp->x = pp->x;
+	sp->y = pp->y;
+	sp->width = pp->width;
+	sp->height = pp->height;
 	if (!gp)
 		*root = sp;
 	else if (gp->first == pp)
@@ -125,6 +132,10 @@ void frame_only(Frame **root, Frame *fp)
 		pp->first = NULL;
 	else
 		pp->second = NULL;
+	fp->x = (*root)->x;
+	fp->y = (*root)->y;
+	fp->width = (*root)->width;
+	fp->height = (*root)->height;
 	frame_free(*root);
 	fp->parent = NULL;
 	*root = fp;

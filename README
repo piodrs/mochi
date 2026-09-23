@@ -6,27 +6,30 @@ Keys
 
 Press C-t, release it, then press a key below
 
+C- means Ctrl; M- means Alt
+
 Key          Action
 2 / 3        Split top/bottom / side by side
 0 / 1        Delete frame / keep only this frame
-C-f / C-b    Next / previous frame
+o / M-o      Next / previous frame
 C-n / C-p    Next / previous window
-w / b        List windows / select by number
-! / k        Run program / close window
-x            Command prompt
+C-b / b      List windows / select by number
+M-! / k      Run program / close window
+M-x          Command prompt
 ?            Active keybindings
-q / r        Quit / restart
 
 C-g or Escape cancels a sequence or prompt
 
 Commands
 
-Open with C-t x, type a command
+Open with C-t M-x, type a command, then press Return
 
 exec xterm
 select 2
 split-vertical
 reload-config
+quit
+restart
 
 Backspace deletes a character. C-u clears the prompt
 

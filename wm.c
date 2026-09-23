@@ -18,9 +18,16 @@
 #include "wm.h"
 #include "x11.h"
 
+#define WM_RUNNING -1
+
+Session fish;
+
 static volatile sig_atomic_t stopped;
 
-static void stop(int sig) { stopped = sig; }
+static void stop(int sig)
+{
+	stopped = sig;
+}
 
 int wm_split(int vertical)
 {
@@ -42,34 +49,21 @@ void wm_frame(int direction)
 
 int wm_remove(void)
 {
-	int w;
-	int h;
-
-	w = fish.tree->width;
-	h = fish.tree->height;
 	fish.frame = frame_remove(&fish.tree, fish.frame);
-	frame_layout(fish.tree, 0, 0, w, h);
 	client_refresh();
 	return TRUE;
 }
 
 int wm_only(void)
 {
-	int w;
-	int h;
-
-	w = fish.tree->width;
-	h = fish.tree->height;
 	frame_only(&fish.tree, fish.frame);
-	frame_layout(fish.tree, 0, 0, w, h);
 	client_refresh();
 	return TRUE;
 }
 
 void wm_quit(int restart)
 {
-	fish.restart = restart;
-	fish.running = FALSE;
+	fish.status = restart ? WM_RESTART : 0;
 }
 
 int wm_run(void)
@@ -80,9 +74,8 @@ int wm_run(void)
 	struct sigaction action;
 	int status;
 	int count;
-	int result;
 
-	result = 1;
+	fish.status = 1;
 	if (!x11_open())
 		return 1;
 	fish.tree = frame_create();
@@ -105,41 +98,43 @@ int wm_run(void)
 		perror(APP_NAME ": signals");
 		goto free_display;
 	}
-	fish.running = TRUE;
-	result = 0;
+	fish.status = WM_RUNNING;
 	client_scan();
+	if (fish.status != WM_RUNNING)
+		goto free_clients;
 	client_refresh();
 	status = keys_init();
 	if (!config_load(TRUE) && !status) {
 		fprintf(stderr, APP_NAME ": cannot grab prefix key\n");
-		fish.running = FALSE;
-		result = 1;
+		fish.status = 1;
 	}
 	fd.fd = ConnectionNumber(fish.display);
 	fd.events = POLLIN;
-	while (fish.running && !stopped) {
+	while (fish.status == WM_RUNNING && !stopped) {
 		count = 0;
-		while (fish.running && !stopped && count++ < EVENT_BATCH &&
-		       XPending(fish.display)) {
+		while (fish.status == WM_RUNNING && !stopped &&
+		       count++ < EVENT_BATCH && XPending(fish.display)) {
 			XNextEvent(fish.display, &event);
 			event_dispatch(&event);
 		}
 		process_reap();
 		input_tick();
 		XFlush(fish.display);
-		if (!fish.running || stopped)
+		if (fish.status != WM_RUNNING || stopped)
 			break;
 		status = poll(&fd, 1, XPending(fish.display) ? 0 : POLL_MS);
 		if (status < 0 && errno != EINTR) {
-			result = 1;
+			fish.status = 1;
 			break;
 		}
 		if (status > 0 &&
 		    (fd.revents & (POLLERR | POLLHUP | POLLNVAL))) {
-			result = 1;
+			fish.status = 1;
 			break;
 		}
 	}
+
+free_clients:
 	input_cancel();
 	keys_free();
 	client_free();
@@ -152,5 +147,5 @@ free_display:
 close_display:
 	frame_free(fish.tree);
 	XCloseDisplay(fish.display);
-	return fish.restart ? WM_RESTART : result;
+	return fish.status == WM_RUNNING ? 0 : fish.status;
 }

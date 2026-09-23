@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -194,7 +193,7 @@ static void manage(Window win, int select)
 	cp = calloc(1, sizeof *cp);
 	if (!cp) {
 		fprintf(stderr, APP_NAME ": out of memory\n");
-		fish.running = FALSE;
+		fish.status = 1;
 		return;
 	}
 	cp->win = win;
@@ -213,7 +212,7 @@ static void manage(Window win, int select)
 	XAddToSaveSet(fish.display, win);
 	XSelectInput(fish.display, win, PropertyChangeMask);
 	XSetWindowBorderWidth(fish.display, win, 0);
-	x11_state(cp->win, NormalState);
+	x11_state(cp->win, cp->mapped ? NormalState : IconicState);
 	if (!cp->transient && (select || !fish.frame->win))
 		fish.frame->win = win;
 	else if (cp->transient && select)
@@ -326,8 +325,9 @@ int client_list(void)
 	Client *selected;
 	char text[MESSAGE_MAX];
 	char *name;
+	char number[3 * sizeof(unsigned long) + 1];
 	size_t pos;
-	int n;
+	int available;
 
 	selected = focused();
 	pos = 0;
@@ -335,14 +335,19 @@ int client_list(void)
 	for (cp = clients; cp; cp = cp->next) {
 		name = NULL;
 		XFetchName(fish.display, cp->win, &name);
-		n = snprintf(text + pos, sizeof text - pos, "%lu:%s%s  ",
-			     cp->id, cp == selected ? "*" : "",
-			     name ? name : "untitled");
+		sprintf(number, "%lu", cp->id);
+		if (strlen(number) + 5 > sizeof text - pos) {
+			if (name)
+				XFree(name);
+			break;
+		}
+		available = sizeof text - pos - strlen(number) - 5;
+		sprintf(text + pos, "%s:%s%.*s  ", number,
+			cp == selected ? "*" : "", available,
+			name ? name : "untitled");
 		if (name)
 			XFree(name);
-		if (n < 0 || (size_t)n >= sizeof text - pos)
-			break;
-		pos += n;
+		pos = strlen(text);
 	}
 	input_message(*text ? text : "No windows");
 	return TRUE;
@@ -442,7 +447,7 @@ void client_scan(void)
 		return;
 	for (i = 0; i < count; ++i)
 		if (XGetWindowAttributes(fish.display, children[i], &attr) &&
-		    attr.map_state == IsViewable)
+		    (attr.map_state == IsViewable || x11_hidden(children[i])))
 			manage(children[i], FALSE);
 	XFree(children);
 }

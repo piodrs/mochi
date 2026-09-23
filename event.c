@@ -36,8 +36,8 @@ void event_dispatch(XEvent *event)
 		break;
 	case ConfigureNotify:
 		if (event->xconfigure.window == fish.root) {
-			frame_layout(fish.tree, 0, 0, event->xconfigure.width,
-				     event->xconfigure.height);
+			fish.tree->width = event->xconfigure.width;
+			fish.tree->height = event->xconfigure.height;
 			client_refresh();
 		}
 		break;

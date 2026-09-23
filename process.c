@@ -27,13 +27,11 @@ static void failure(const char *command, int status)
 	char message[MESSAGE_MAX];
 
 	if (WIFSIGNALED(status))
-		snprintf(message, sizeof message,
-			 "Program killed by signal %d: %s", WTERMSIG(status),
-			 command);
+		sprintf(message, "Program killed by signal %d: %s",
+			WTERMSIG(status), command);
 	else
-		snprintf(message, sizeof message,
-			 "Program exited with status %d: %s",
-			 WEXITSTATUS(status), command);
+		sprintf(message, "Program exited with status %d: %s",
+			WEXITSTATUS(status), command);
 	fprintf(stderr, APP_NAME ": %s\n", message);
 	input_message(message);
 }

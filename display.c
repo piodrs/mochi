@@ -33,28 +33,38 @@ int display_init(void)
 			    CWOverrideRedirect | CWBackPixel | CWEventMask,
 			    &attr);
 	if (x11_untrap()) {
-		XFreeFont(fish.display, font);
-		return FALSE;
+		bar = None;
+		goto fail;
 	}
 	gc = XCreateGC(fish.display, bar, 0, NULL);
-	if (!gc) {
-		XDestroyWindow(fish.display, bar);
-		XFreeFont(fish.display, font);
-		return FALSE;
-	}
+	if (!gc)
+		goto fail;
 	XSetForeground(fish.display, gc, WhitePixel(fish.display, screen));
 	XSetFont(fish.display, gc, font->fid);
 	return TRUE;
+
+fail:
+	display_free();
+	return FALSE;
 }
 
 void display_free(void)
 {
-	XFreeGC(fish.display, gc);
-	XFreeFont(fish.display, font);
-	XDestroyWindow(fish.display, bar);
+	if (gc)
+		XFreeGC(fish.display, gc);
+	if (font)
+		XFreeFont(fish.display, font);
+	if (bar)
+		XDestroyWindow(fish.display, bar);
+	gc = NULL;
+	font = NULL;
+	bar = None;
 }
 
-Window display_window(void) { return bar; }
+Window display_window(void)
+{
+	return bar;
+}
 
 static int row_length(const char *text, int n, int cols)
 {
@@ -134,6 +144,12 @@ void display_draw(const char *text, int tail)
 	}
 }
 
-void display_show(void) { XMapRaised(fish.display, bar); }
+void display_show(void)
+{
+	XMapRaised(fish.display, bar);
+}
 
-void display_hide(void) { XUnmapWindow(fish.display, bar); }
+void display_hide(void)
+{
+	XUnmapWindow(fish.display, bar);
+}

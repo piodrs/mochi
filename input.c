@@ -1,4 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
@@ -28,9 +27,9 @@ void input_draw(void)
 	char text[MESSAGE_MAX];
 
 	if (mode == INPUT_PROMPT)
-		snprintf(text, sizeof text, "M-x %s_", line);
+		sprintf(text, "M-x %s_", line);
 	else if (mode == INPUT_PREFIX)
-		snprintf(text, sizeof text, "%s  (C-g cancel)", keys_name());
+		sprintf(text, "%s  (C-g cancel)", keys_name());
 	else {
 		display_draw(message, FALSE);
 		return;
@@ -40,7 +39,7 @@ void input_draw(void)
 
 void input_message(const char *text)
 {
-	snprintf(message, sizeof message, "%s", text);
+	sprintf(message, "%.*s", MESSAGE_MAX - 1, text);
 	expires = time(NULL) + MESSAGE_SECONDS;
 	display_show();
 	input_draw();
@@ -54,7 +53,7 @@ int input_prompt(const char *text)
 		return FALSE;
 	}
 	mode = INPUT_PROMPT;
-	snprintf(line, sizeof line, "%s", text);
+	sprintf(line, "%.*s", COMMAND_MAX - 1, text);
 	pos = strlen(line);
 	display_show();
 	input_draw();

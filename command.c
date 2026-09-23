@@ -1,6 +1,4 @@
-#define _POSIX_C_SOURCE 200809L
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 #include "client.h"
 #include "command.h"
@@ -13,13 +11,18 @@
 
 typedef struct {
 	const char *name;
-	const char *description;
 	int (*run)(void);
 } Command;
 
-static int split_horizontal(void) { return wm_split(FALSE); }
+static int split_horizontal(void)
+{
+	return wm_split(FALSE);
+}
 
-static int split_vertical(void) { return wm_split(TRUE); }
+static int split_vertical(void)
+{
+	return wm_split(TRUE);
+}
 
 static int next_frame(void)
 {
@@ -57,26 +60,77 @@ static int restart(void)
 	return TRUE;
 }
 
-static int prompt(void) { return input_prompt(""); }
+static int prompt(void)
+{
+	return input_prompt("");
+}
 
-static int reload(void) { return config_load(FALSE); }
+static int reload(void)
+{
+	return config_load(FALSE);
+}
 
 static const Command commands[] = {
-	{"split-horizontal", "Split top/bottom", split_horizontal},
-	{"split-vertical", "Split side by side", split_vertical},
-	{"next-frame", "Next frame", next_frame},
-	{"previous-frame", "Previous frame", previous_frame},
-	{"next-window", "Next window", next_window},
-	{"previous-window", "Previous window", previous_window},
-	{"delete-frame", "Delete frame", wm_remove},
-	{"only-frame", "Keep only this frame", wm_only},
-	{"close", "Close window", client_close},
-	{"windows", "List windows", client_list},
-	{"quit", "Quit window manager", quit},
-	{"restart", "Restart window manager", restart},
-	{"command", "Open command prompt", prompt},
-	{"help", "Show keybindings", keys_help},
-	{"reload-config", "Reload configuration", reload},
+	{
+		"split-horizontal",
+		split_horizontal,
+	},
+	{
+		"split-vertical",
+		split_vertical,
+	},
+	{
+		"next-frame",
+		next_frame,
+	},
+	{
+		"previous-frame",
+		previous_frame,
+	},
+	{
+		"next-window",
+		next_window,
+	},
+	{
+		"previous-window",
+		previous_window,
+	},
+	{
+		"delete-frame",
+		wm_remove,
+	},
+	{
+		"only-frame",
+		wm_only,
+	},
+	{
+		"close",
+		client_close,
+	},
+	{
+		"windows",
+		client_list,
+	},
+	{
+		"quit",
+		quit,
+	},
+	{
+		"restart",
+		restart,
+	},
+	{
+		"command",
+		prompt,
+	},
+	{
+		"help",
+		keys_help,
+	},
+	{
+		"reload-config",
+		reload,
+	},
 };
 
 static char *split(char *line)
@@ -149,23 +203,4 @@ int command_run(const char *text)
 		return FALSE;
 	}
 	return cp->run();
-}
-
-void command_describe(const char *text, char *buffer, size_t size)
-{
-	char line[COMMAND_MAX];
-	char *arg;
-	const Command *cp;
-
-	snprintf(line, sizeof line, "%s", text);
-	arg = split(line);
-	if (!strcmp(line, "exec") || !strcmp(line, "select")) {
-		snprintf(buffer, size, "%s%s%s",
-			 !strcmp(line, "exec") ? "Run program"
-					       : "Select window",
-			 *arg ? ": " : "", arg);
-		return;
-	}
-	cp = find(line);
-	snprintf(buffer, size, "%s", cp ? cp->description : text);
 }

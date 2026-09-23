@@ -11,6 +11,8 @@ static int trapping;
 static int failed;
 static Atom protocols;
 static Atom wm_state;
+static Atom change_state;
+static Atom timestamp;
 
 static int xerror(Display *display, XErrorEvent *event)
 {
@@ -64,26 +66,46 @@ int x11_open(void)
 	}
 	protocols = XInternAtom(fish.display, "WM_PROTOCOLS", False);
 	wm_state = XInternAtom(fish.display, "WM_STATE", False);
+	change_state = XInternAtom(fish.display, "WM_CHANGE_STATE", False);
+	timestamp = XInternAtom(fish.display, "_FISH_TIMESTAMP", False);
 	return TRUE;
 }
 
 Time x11_time(Window win)
 {
 	XEvent event;
-	Atom atom;
 
-	atom = XInternAtom(fish.display, "_FISH_TIMESTAMP", False);
-	XChangeProperty(fish.display, win, atom, XA_INTEGER, 8, PropModeReplace,
-			NULL, 0);
+	XChangeProperty(fish.display, win, timestamp, XA_INTEGER, 8,
+			PropModeReplace, NULL, 0);
 	XWindowEvent(fish.display, win, PropertyChangeMask, &event);
 	return event.xproperty.time;
 }
 
 int x11_iconic(XClientMessageEvent *event)
 {
-	return event->message_type ==
-		       XInternAtom(fish.display, "WM_CHANGE_STATE", False) &&
-	       event->format == 32 && event->data.l[0] == IconicState;
+	return event->message_type == change_state && event->format == 32 &&
+	       event->data.l[0] == IconicState;
+}
+
+int x11_hidden(Window win)
+{
+	Atom type;
+	int format;
+	unsigned long count;
+	unsigned long rest;
+	unsigned char *data;
+	int hidden;
+
+	data = NULL;
+	hidden = FALSE;
+	if (XGetWindowProperty(fish.display, win, wm_state, 0, 2, False,
+			       wm_state, &type, &format, &count, &rest,
+			       &data) == Success &&
+	    type == wm_state && format == 32 && count == 2)
+		hidden = ((long *)data)[0] == IconicState;
+	if (data)
+		XFree(data);
+	return hidden;
 }
 
 void x11_state(Window win, long value)

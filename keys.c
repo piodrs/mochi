@@ -1,11 +1,9 @@
-#define _POSIX_C_SOURCE 200809L
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/XKBlib.h>
 #include <X11/keysym.h>
 #include <stdio.h>
 #include <string.h>
-#include "command.h"
 #include "defs.h"
 #include "input.h"
 #include "keys.h"
@@ -21,28 +19,68 @@ typedef struct {
 } DefaultBinding;
 
 static const DefaultBinding defaults[] = {
-	{"2", "split-horizontal"},
-	{"3", "split-vertical"},
-	{"0", "delete-frame"},
-	{"1", "only-frame"},
-	{"C-f", "next-frame"},
-	{"C-b", "previous-frame"},
-	{"C-n", "next-window"},
-	{"C-p", "previous-window"},
-	{"b", "select"},
-	{"w", "windows"},
-	{"!", "exec"},
-	{"k", "close"},
-	{"x", "command"},
-	{"?", "help"},
-	{"q", "quit"},
-	{"r", "restart"},
+	{
+		"2",
+		"split-horizontal",
+	},
+	{
+		"3",
+		"split-vertical",
+	},
+	{
+		"0",
+		"delete-frame",
+	},
+	{
+		"1",
+		"only-frame",
+	},
+	{
+		"o",
+		"next-frame",
+	},
+	{
+		"M-o",
+		"previous-frame",
+	},
+	{
+		"C-n",
+		"next-window",
+	},
+	{
+		"C-p",
+		"previous-window",
+	},
+	{
+		"b",
+		"select",
+	},
+	{
+		"C-b",
+		"windows",
+	},
+	{
+		"M-!",
+		"exec",
+	},
+	{
+		"k",
+		"close",
+	},
+	{
+		"M-x",
+		"command",
+	},
+	{
+		"?",
+		"help",
+	},
 };
 
 int keys_parse(const char *text, Key *key)
 {
 	unsigned int bit;
-	unsigned char ch;
+	char ch;
 
 	key->mask = 0;
 	while (text[0] && text[1] == '-') {
@@ -186,7 +224,7 @@ int keys_install(const Keymap *map)
 		if (active.prefix.sym && !grab(active.prefix)) {
 			XUngrabKey(fish.display, AnyKey, AnyModifier,
 				   fish.root);
-			fish.running = FALSE;
+			fish.status = 1;
 		}
 	}
 	XUngrabServer(fish.display);
@@ -222,7 +260,10 @@ int keys_prefix(KeySym sym, unsigned int mask)
 	return sym == active.prefix.sym && mask == active.prefix.mask;
 }
 
-unsigned int keys_locks(void) { return locks; }
+unsigned int keys_locks(void)
+{
+	return locks;
+}
 
 const char *keys_lookup(KeySym sym, unsigned int mask)
 {
@@ -235,25 +276,25 @@ const char *keys_lookup(KeySym sym, unsigned int mask)
 	return NULL;
 }
 
-const char *keys_name(void) { return active.name; }
+const char *keys_name(void)
+{
+	return active.name;
+}
 
 int keys_help(void)
 {
 	char text[MESSAGE_MAX];
 	char label[KEY_NAME_MAX];
-	char description[128];
 	char symbol[2];
 	const char *name;
 	Key key;
 	size_t i;
 	size_t pos;
-	int n;
+	size_t len;
 
-	n = snprintf(text, sizeof text, "Prefix %s\n%-12s  Cancel\n",
-		     active.name, "C-g / Escape");
-	if (n < 0)
-		return FALSE;
-	pos = n;
+	sprintf(text, "Prefix %s\n%-12s  Cancel\n", active.name,
+		"C-g / Escape");
+	pos = strlen(text);
 	for (i = 0; i < active.count; ++i) {
 		key = active.bindings[i].key;
 		name = XKeysymToString(key.sym);
@@ -262,17 +303,16 @@ int keys_help(void)
 			symbol[1] = '\0';
 			name = symbol;
 		}
-		snprintf(label, sizeof label, "%s%s%s%s",
-			 key.mask & ControlMask ? "C-" : "",
-			 key.mask & Mod1Mask ? "M-" : "",
-			 key.mask & Mod4Mask ? "s-" : "", name ? name : "?");
-		command_describe(active.bindings[i].command, description,
-				 sizeof description);
-		n = snprintf(text + pos, sizeof text - pos, "%s%-12s  %s",
-			     i ? "\n" : "", label, description);
-		if (n < 0 || (size_t)n >= sizeof text - pos)
+		sprintf(label, "%s%s%s%.*s", key.mask & ControlMask ? "C-" : "",
+			key.mask & Mod1Mask ? "M-" : "",
+			key.mask & Mod4Mask ? "s-" : "", KEY_NAME_MAX - 7,
+			name ? name : "?");
+		len = strlen(label) + strlen(active.bindings[i].command) + 3;
+		if (len >= sizeof text - pos)
 			break;
-		pos += n;
+		sprintf(text + pos, "%s%s  %s", i ? "\n" : "", label,
+			active.bindings[i].command);
+		pos = strlen(text);
 	}
 	input_message(text);
 	return TRUE;
