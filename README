@@ -38,10 +38,9 @@ Configuration
 Edit ~/.fishrc. Defaults work without this file
 
 prefix C-t
-bind Tab next-frame
-bind n next-window
-bind p previous-window
-bind Return exec xterm
+
+bind Return exec alacritty
+bind e exec firefox
 bind R reload-config
 
-exec feh --no-fehbg --bg-fill "$HOME/Pictures/wallpaper.jpg"
+exec feh --no-fehbg --bg-fill "$HOME/Images/wallpaper.jpg"
