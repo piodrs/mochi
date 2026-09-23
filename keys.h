@@ -1,0 +1,42 @@
+#ifndef KEYS_H
+#define KEYS_H
+
+#include <X11/Xlib.h>
+#include <stddef.h>
+#include "defs.h"
+
+#define KEY_NAME_MAX 64
+#define BINDING_MAX 128
+
+typedef struct {
+	KeySym sym;
+	unsigned int mask;
+} Key;
+
+typedef struct {
+	Key key;
+	char command[COMMAND_MAX];
+} Binding;
+
+typedef struct {
+	Key prefix;
+	char name[KEY_NAME_MAX];
+	Binding bindings[BINDING_MAX];
+	size_t count;
+} Keymap;
+
+int keys_parse(const char *text, Key *key);
+void keys_defaults(Keymap *map);
+int keys_bind(Keymap *map, Key key, const char *command);
+void keys_unbind(Keymap *map, Key key);
+int keys_install(const Keymap *map);
+int keys_init(void);
+void keys_free(void);
+void keys_refresh(void);
+int keys_prefix(KeySym sym, unsigned int mask);
+unsigned int keys_locks(void);
+const char *keys_lookup(KeySym sym, unsigned int mask);
+const char *keys_name(void);
+int keys_help(void);
+
+#endif /* KEYS_H */

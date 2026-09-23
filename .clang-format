@@ -1,0 +1,9 @@
+UseTab: Always
+TabWidth: 8
+IndentWidth: 8
+ContinuationIndentWidth: 8
+ColumnLimit: 80
+BreakBeforeBraces: Linux
+SpaceBeforeParens: ControlStatements
+PointerAlignment: Right
+SortIncludes: false

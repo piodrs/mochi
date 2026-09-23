@@ -1,0 +1,44 @@
+πFish
+
+Minimal X11 window manager in C. Ratpoison-inspired frames, Emacs-inspired keys
+
+Keys
+
+Press C-t, release it, then press a key below
+
+Key          Action
+2 / 3        Split top/bottom / side by side
+0 / 1        Delete frame / keep only this frame
+C-f / C-b    Next / previous frame
+C-n / C-p    Next / previous window
+w / b        List windows / select by number
+! / k        Run program / close window
+x            Command prompt
+?            Active keybindings
+q / r        Quit / restart
+
+C-g or Escape cancels a sequence or prompt
+
+Commands
+
+Open with C-t x, type a command
+
+exec xterm
+select 2
+split-vertical
+reload-config
+
+Backspace deletes a character. C-u clears the prompt
+
+Configuration
+
+Edit ~/.fishrc. Defaults work without this file
+
+prefix C-t
+bind Tab next-frame
+bind n next-window
+bind p previous-window
+bind Return exec xterm
+bind R reload-config
+
+exec feh --no-fehbg --bg-fill "$HOME/Pictures/wallpaper.jpg"
