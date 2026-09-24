@@ -1,12 +1,13 @@
 #include <stddef.h>
 #include <string.h>
+
 #include "client.h"
 #include "command.h"
 #include "config.h"
 #include "defs.h"
+#include "input.h"
 #include "keys.h"
 #include "process.h"
-#include "input.h"
 #include "wm.h"
 
 typedef struct {

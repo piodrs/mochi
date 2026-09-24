@@ -1,6 +1,8 @@
-#include <X11/Xlib.h>
 #include <stddef.h>
 #include <string.h>
+
+#include <X11/Xlib.h>
+
 #include "defs.h"
 #include "display.h"
 #include "frame.h"

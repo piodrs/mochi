@@ -1,9 +1,11 @@
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysym.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysym.h>
+
 #include "command.h"
 #include "defs.h"
 #include "display.h"

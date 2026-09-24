@@ -1,8 +1,10 @@
 #ifndef KEYS_H
 #define KEYS_H
 
-#include <X11/Xlib.h>
 #include <stddef.h>
+
+#include <X11/Xlib.h>
+
 #include "defs.h"
 
 #define KEY_NAME_MAX 64

@@ -1,4 +1,5 @@
 #include <X11/Xlib.h>
+
 #include "client.h"
 #include "display.h"
 #include "event.h"

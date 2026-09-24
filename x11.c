@@ -1,8 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
-#include <stdio.h>
-#include <string.h>
+
 #include "defs.h"
 #include "session.h"
 #include "x11.h"

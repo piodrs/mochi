@@ -2,6 +2,7 @@
 #define SESSION_H
 
 #include <X11/Xlib.h>
+
 #include "frame.h"
 
 typedef struct {

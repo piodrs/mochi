@@ -1,10 +1,14 @@
 #define _POSIX_C_SOURCE 200809L
-#include <X11/Xlib.h>
+
 #include <errno.h>
-#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <poll.h>
+
+#include <X11/Xlib.h>
+
 #include "client.h"
 #include "config.h"
 #include "defs.h"
