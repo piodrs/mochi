@@ -16,11 +16,11 @@
 #define INPUT_PROMPT 2
 #define MESSAGE_SECONDS 5
 
-static int mode;
-static char line[COMMAND_MAX];
-static char message[MESSAGE_MAX];
-static size_t pos;
-static time_t expires;
+int mode;
+char line[COMMAND_MAX];
+char message[MESSAGE_MAX];
+size_t pos;
+time_t expires;
 
 void input_draw(void)
 {

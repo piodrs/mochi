@@ -30,13 +30,13 @@ struct Client {
 	int height;
 };
 
-static Client *clients;
-static unsigned long next_id;
-static Atom protocols;
-static Atom take_focus;
-static Atom delete_window;
+Client *clients;
+unsigned long next_id;
+Atom client_protocols;
+Atom take_focus;
+Atom delete_window;
 
-static Client *find(Window win)
+Client *client_find(Window win)
 {
 	Client *cp;
 
@@ -46,7 +46,7 @@ static Client *find(Window win)
 	return NULL;
 }
 
-static void properties(Client *cp)
+void properties(Client *cp)
 {
 	XWMHints *hints;
 	Atom *list;
@@ -70,7 +70,7 @@ static void properties(Client *cp)
 	}
 }
 
-static Frame *client_frame(Client *cp)
+Frame *client_frame(Client *cp)
 {
 	Frame *fp;
 
@@ -78,24 +78,24 @@ static Frame *client_frame(Client *cp)
 		fp = frame_find(fish.tree, cp->win);
 		if (fp)
 			return fp;
-		cp = find(cp->transient);
+		cp = client_find(cp->transient);
 	}
 	return NULL;
 }
 
-static Client *focused(void)
+Client *focused(void)
 {
 	Client *cp;
 	Client *selected;
 
-	selected = find(fish.frame->win);
+	selected = client_find(fish.frame->win);
 	for (cp = clients; cp; cp = cp->next)
 		if (cp->transient && client_frame(cp) == fish.frame)
 			selected = cp;
 	return selected;
 }
 
-static void configure(Client *cp, Frame *fp)
+void configure(Client *cp, Frame *fp)
 {
 	XEvent event;
 	int x;
@@ -165,12 +165,12 @@ void client_refresh(void)
 	XFlush(fish.display);
 }
 
-static void show(Client *cp)
+void show(Client *cp)
 {
 	Frame *fp;
 	Client *parent;
 
-	while ((parent = find(cp->transient)) != NULL)
+	while ((parent = client_find(cp->transient)) != NULL)
 		cp = parent;
 	fp = frame_find(fish.tree, cp->win);
 	if (fp)
@@ -179,13 +179,13 @@ static void show(Client *cp)
 		fish.frame->win = cp->win;
 }
 
-static void manage(Window win, int select)
+void manage(Window win, int select)
 {
 	XWindowAttributes attr;
 	Client *cp;
 	Client **tail;
 
-	if (win == display_window() || find(win))
+	if (win == display_window() || client_find(win))
 		return;
 	if (!XGetWindowAttributes(fish.display, win, &attr) ||
 	    attr.override_redirect || attr.class == InputOnly)
@@ -203,7 +203,7 @@ static void manage(Window win, int select)
 	cp->width = attr.width;
 	cp->height = attr.height;
 	XGetTransientForHint(fish.display, win, &cp->transient);
-	if (!find(cp->transient))
+	if (!client_find(cp->transient))
 		cp->transient = None;
 	properties(cp);
 	for (tail = &clients; *tail; tail = &(*tail)->next)
@@ -219,7 +219,7 @@ static void manage(Window win, int select)
 		show(cp);
 }
 
-static void forget(Client *cp, int destroyed)
+void forget(Client *cp, int destroyed)
 {
 	Client **link;
 	Client *other;
@@ -258,7 +258,7 @@ void client_next(int direction)
 
 	if (!clients)
 		return;
-	selected = find(fish.frame->win);
+	selected = client_find(fish.frame->win);
 	previous = NULL;
 	for (cp = clients; cp; cp = cp->next) {
 		if (cp == selected)
@@ -359,7 +359,7 @@ void client_configure(XConfigureRequestEvent *event)
 	Frame *fp;
 	XWindowChanges changes;
 
-	cp = find(event->window);
+	cp = client_find(event->window);
 	if (cp) {
 		if (cp->transient) {
 			if (event->value_mask & CWWidth)
@@ -387,7 +387,7 @@ void client_map(Window win)
 {
 	Client *cp;
 
-	cp = find(win);
+	cp = client_find(win);
 	if (cp)
 		show(cp);
 	else
@@ -399,7 +399,7 @@ void client_unmap(XUnmapEvent *event)
 {
 	Client *cp;
 
-	cp = find(event->window);
+	cp = client_find(event->window);
 	if (!cp)
 		return;
 	if (cp->pending && !event->send_event)
@@ -412,7 +412,7 @@ void client_destroy(Window win)
 {
 	Client *cp;
 
-	cp = find(win);
+	cp = client_find(win);
 	if (cp)
 		forget(cp, TRUE);
 }
@@ -439,7 +439,7 @@ void client_scan(void)
 	unsigned int i;
 	XWindowAttributes attr;
 
-	protocols = XInternAtom(fish.display, "WM_PROTOCOLS", False);
+	client_protocols = XInternAtom(fish.display, "WM_PROTOCOLS", False);
 	take_focus = XInternAtom(fish.display, "WM_TAKE_FOCUS", False);
 	delete_window = XInternAtom(fish.display, "WM_DELETE_WINDOW", False);
 	if (!XQueryTree(fish.display, fish.root, &rw, &parent, &children,
@@ -471,9 +471,9 @@ void client_property(XPropertyEvent *event)
 {
 	Client *cp;
 
-	if (event->atom != XA_WM_HINTS && event->atom != protocols)
+	if (event->atom != XA_WM_HINTS && event->atom != client_protocols)
 		return;
-	cp = find(event->window);
+	cp = client_find(event->window);
 	if (cp)
 		properties(cp);
 }

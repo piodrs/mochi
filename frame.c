@@ -60,7 +60,7 @@ int frame_split(Frame *fp, int vertical)
 	return TRUE;
 }
 
-static Frame *frame_first(Frame *fp)
+Frame *frame_first(Frame *fp)
 {
 	while (fp->first)
 		fp = fp->first;

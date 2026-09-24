@@ -7,14 +7,14 @@
 #include "session.h"
 #include "x11.h"
 
-static int trapping;
-static int failed;
-static Atom protocols;
-static Atom wm_state;
-static Atom change_state;
-static Atom timestamp;
+int trapping;
+int failed;
+Atom x11_protocols;
+Atom wm_state;
+Atom change_state;
+Atom timestamp;
 
-static int xerror(Display *display, XErrorEvent *event)
+int xerror(Display *display, XErrorEvent *event)
 {
 	char text[256];
 
@@ -64,7 +64,7 @@ int x11_open(void)
 		XCloseDisplay(fish.display);
 		return FALSE;
 	}
-	protocols = XInternAtom(fish.display, "WM_PROTOCOLS", False);
+	x11_protocols = XInternAtom(fish.display, "WM_PROTOCOLS", False);
 	wm_state = XInternAtom(fish.display, "WM_STATE", False);
 	change_state = XInternAtom(fish.display, "WM_CHANGE_STATE", False);
 	timestamp = XInternAtom(fish.display, "_FISH_TIMESTAMP", False);
@@ -125,7 +125,7 @@ void x11_protocol(Window win, Atom atom)
 	memset(&event, 0, sizeof event);
 	event.xclient.type = ClientMessage;
 	event.xclient.window = win;
-	event.xclient.message_type = protocols;
+	event.xclient.message_type = x11_protocols;
 	event.xclient.format = 32;
 	event.xclient.data.l[0] = atom;
 	event.xclient.data.l[1] = fish.time;

@@ -14,63 +14,63 @@ typedef struct {
 	int (*run)(void);
 } Command;
 
-static int split_horizontal(void)
+int split_horizontal(void)
 {
 	return wm_split(FALSE);
 }
 
-static int split_vertical(void)
+int split_vertical(void)
 {
 	return wm_split(TRUE);
 }
 
-static int next_frame(void)
+int next_frame(void)
 {
 	wm_frame(1);
 	return TRUE;
 }
 
-static int previous_frame(void)
+int previous_frame(void)
 {
 	wm_frame(-1);
 	return TRUE;
 }
 
-static int next_window(void)
+int next_window(void)
 {
 	client_next(1);
 	return TRUE;
 }
 
-static int previous_window(void)
+int previous_window(void)
 {
 	client_next(-1);
 	return TRUE;
 }
 
-static int quit(void)
+int quit(void)
 {
 	wm_quit(FALSE);
 	return TRUE;
 }
 
-static int restart(void)
+int restart(void)
 {
 	wm_quit(TRUE);
 	return TRUE;
 }
 
-static int prompt(void)
+int prompt(void)
 {
 	return input_prompt("");
 }
 
-static int reload(void)
+int reload(void)
 {
 	return config_load(FALSE);
 }
 
-static const Command commands[] = {
+const Command commands[] = {
 	{
 		"split-horizontal",
 		split_horizontal,
@@ -133,7 +133,7 @@ static const Command commands[] = {
 	},
 };
 
-static char *split(char *line)
+char *split(char *line)
 {
 	char *arg;
 	char *end;
@@ -151,7 +151,7 @@ static char *split(char *line)
 	return arg;
 }
 
-static const Command *find(const char *name)
+const Command *command_find(const char *name)
 {
 	size_t i;
 
@@ -174,7 +174,7 @@ int command_valid(const char *text)
 	arg = split(line);
 	if (!strcmp(line, "exec") || !strcmp(line, "select"))
 		return TRUE;
-	return !*arg && find(line) != NULL;
+	return !*arg && command_find(line) != NULL;
 }
 
 int command_run(const char *text)
@@ -197,7 +197,7 @@ int command_run(const char *text)
 		return *arg ? process_spawn(arg) : input_prompt("exec ");
 	if (!strcmp(line, "select"))
 		return *arg ? client_select(arg) : input_prompt("select ");
-	cp = find(line);
+	cp = command_find(line);
 	if (!cp || *arg) {
 		input_message("Unknown command or invalid arguments");
 		return FALSE;

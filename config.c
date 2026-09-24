@@ -19,21 +19,21 @@ typedef struct {
 	size_t count;
 } Config;
 
-static const char *filename;
+const char *filename;
 
 void config_path(const char *path)
 {
 	filename = path;
 }
 
-static char *skip(char *text)
+char *skip(char *text)
 {
 	while (*text == ' ' || *text == '\t' || *text == '\r')
 		++text;
 	return text;
 }
 
-static char *word(char **rest)
+char *word(char **rest)
 {
 	char *start;
 	char *end;
@@ -48,7 +48,7 @@ static char *word(char **rest)
 	return start;
 }
 
-static const char *parse(Config *cfg, char *line)
+const char *parse(Config *cfg, char *line)
 {
 	char *op;
 	char *arg;
@@ -95,7 +95,7 @@ static const char *parse(Config *cfg, char *line)
 	return NULL;
 }
 
-static const char *read_config(FILE *file, Config *cfg, unsigned long *number)
+const char *read_config(FILE *file, Config *cfg, unsigned long *number)
 {
 	char line[COMMAND_MAX];
 	const char *error;
@@ -126,7 +126,7 @@ static const char *read_config(FILE *file, Config *cfg, unsigned long *number)
 	return parse(cfg, line);
 }
 
-static int report(const char *path, unsigned long line, const char *error)
+int report(const char *path, unsigned long line, const char *error)
 {
 	char text[MESSAGE_MAX];
 

@@ -22,9 +22,9 @@
 
 Session fish;
 
-static volatile sig_atomic_t stopped;
+volatile sig_atomic_t stopped;
 
-static void stop(int sig)
+void stop(int sig)
 {
 	stopped = sig;
 }

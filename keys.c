@@ -10,15 +10,15 @@
 #include "session.h"
 #include "x11.h"
 
-static Keymap active;
-static unsigned int locks;
+Keymap active;
+unsigned int locks;
 
 typedef struct {
 	const char *key;
 	const char *command;
 } DefaultBinding;
 
-static const DefaultBinding defaults[] = {
+const DefaultBinding defaults[] = {
 	{
 		"2",
 		"split-horizontal",
@@ -166,7 +166,7 @@ void keys_defaults(Keymap *map)
 	}
 }
 
-static void update_locks(void)
+void update_locks(void)
 {
 	XModifierKeymap *map;
 	KeyCode num;
@@ -186,7 +186,7 @@ static void update_locks(void)
 	XFreeModifiermap(map);
 }
 
-static int grab(Key key)
+int grab(Key key)
 {
 	KeyCode code;
 	unsigned int shift;

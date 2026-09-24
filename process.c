@@ -20,9 +20,9 @@ struct Process {
 	char command[COMMAND_MAX];
 };
 
-static Process *head;
+Process *head;
 
-static void failure(const char *command, int status)
+void failure(const char *command, int status)
 {
 	char message[MESSAGE_MAX];
 

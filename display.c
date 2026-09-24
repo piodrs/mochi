@@ -11,9 +11,9 @@
 #define LINE_HEIGHT 16
 #define TEXT_PAD 4
 
-static Window bar;
-static GC gc;
-static XFontStruct *font;
+Window bar;
+GC gc;
+XFontStruct *font;
 
 int display_init(void)
 {
@@ -66,7 +66,7 @@ Window display_window(void)
 	return bar;
 }
 
-static int row_length(const char *text, int n, int cols)
+int row_length(const char *text, int n, int cols)
 {
 	int count;
 
