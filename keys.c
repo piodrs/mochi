@@ -176,8 +176,8 @@ void update_locks(void)
 	int j;
 
 	locks = LockMask;
-	num = XKeysymToKeycode(fish.display, XK_Num_Lock);
-	map = XGetModifierMapping(fish.display);
+	num = XKeysymToKeycode(mochi.display, XK_Num_Lock);
+	map = XGetModifierMapping(mochi.display);
 	if (!map)
 		return;
 	for (i = 0; i < 8; ++i)
@@ -194,20 +194,20 @@ int grab(Key key)
 	unsigned int shift;
 	unsigned int mask;
 
-	code = XKeysymToKeycode(fish.display, key.sym);
+	code = XKeysymToKeycode(mochi.display, key.sym);
 	if (!code)
 		return FALSE;
 	shift = 0;
-	if (XkbKeycodeToKeysym(fish.display, code, 0, 0) != key.sym) {
-		if (XkbKeycodeToKeysym(fish.display, code, 0, 1) != key.sym)
+	if (XkbKeycodeToKeysym(mochi.display, code, 0, 0) != key.sym) {
+		if (XkbKeycodeToKeysym(mochi.display, code, 0, 1) != key.sym)
 			return FALSE;
 		shift = ShiftMask;
 	}
 	x11_trap();
 	for (mask = 0; mask < 256; ++mask)
 		if (!(mask & ~locks))
-			XGrabKey(fish.display, code, key.mask | shift | mask,
-				 fish.root, False, GrabModeAsync,
+			XGrabKey(mochi.display, code, key.mask | shift | mask,
+				 mochi.root, False, GrabModeAsync,
 				 GrabModeAsync);
 	return x11_untrap() == 0;
 }
@@ -216,21 +216,21 @@ int keys_install(const Keymap *map)
 {
 	int ok;
 
-	XGrabServer(fish.display);
-	XUngrabKey(fish.display, AnyKey, AnyModifier, fish.root);
+	XGrabServer(mochi.display);
+	XUngrabKey(mochi.display, AnyKey, AnyModifier, mochi.root);
 	ok = grab(map->prefix);
 	if (ok) {
 		active = *map;
 	} else {
-		XUngrabKey(fish.display, AnyKey, AnyModifier, fish.root);
+		XUngrabKey(mochi.display, AnyKey, AnyModifier, mochi.root);
 		if (active.prefix.sym && !grab(active.prefix)) {
-			XUngrabKey(fish.display, AnyKey, AnyModifier,
-				   fish.root);
-			fish.status = 1;
+			XUngrabKey(mochi.display, AnyKey, AnyModifier,
+				   mochi.root);
+			mochi.status = 1;
 		}
 	}
-	XUngrabServer(fish.display);
-	XFlush(fish.display);
+	XUngrabServer(mochi.display);
+	XFlush(mochi.display);
 	return ok;
 }
 
@@ -246,7 +246,7 @@ int keys_init(void)
 
 void keys_free(void)
 {
-	XUngrabKey(fish.display, AnyKey, AnyModifier, fish.root);
+	XUngrabKey(mochi.display, AnyKey, AnyModifier, mochi.root);
 }
 
 void keys_refresh(void)

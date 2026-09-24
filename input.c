@@ -49,7 +49,7 @@ void input_message(const char *text)
 
 int input_prompt(const char *text)
 {
-	if (XGrabKeyboard(fish.display, fish.root, False, GrabModeAsync,
+	if (XGrabKeyboard(mochi.display, mochi.root, False, GrabModeAsync,
 			  GrabModeAsync, CurrentTime) != GrabSuccess) {
 		input_message("Cannot grab keyboard");
 		return FALSE;
@@ -75,7 +75,7 @@ void input_cancel(void)
 	mode = INPUT_IDLE;
 	message[0] = '\0';
 	expires = 0;
-	XUngrabKeyboard(fish.display, CurrentTime);
+	XUngrabKeyboard(mochi.display, CurrentTime);
 	display_hide();
 }
 
@@ -96,7 +96,7 @@ void input_key(XKeyEvent *event)
 	if (!mode) {
 		if (!keys_prefix(key, mask))
 			return;
-		if (XGrabKeyboard(fish.display, fish.root, False, GrabModeAsync,
+		if (XGrabKeyboard(mochi.display, mochi.root, False, GrabModeAsync,
 				  GrabModeAsync, event->time) != GrabSuccess)
 			return;
 		mode = INPUT_PREFIX;
@@ -116,7 +116,7 @@ void input_key(XKeyEvent *event)
 		binding = keys_lookup(key, mask);
 		if (binding) {
 			if (!command_run(binding))
-				XBell(fish.display, 0);
+				XBell(mochi.display, 0);
 			return;
 		}
 		input_message("Undefined key");
@@ -125,7 +125,7 @@ void input_key(XKeyEvent *event)
 	if (key == XK_Return || key == XK_KP_Enter) {
 		input_cancel();
 		if (!command_run(line))
-			XBell(fish.display, 0);
+			XBell(mochi.display, 0);
 		return;
 	}
 	if (key == XK_BackSpace || (key == XK_h && mask == ControlMask)) {
@@ -136,7 +136,7 @@ void input_key(XKeyEvent *event)
 		line[0] = '\0';
 	} else if (!mask) {
 		if (n > 0 && pos == sizeof line - 1)
-			XBell(fish.display, 0);
+			XBell(mochi.display, 0);
 		for (j = 0; j < n && pos < sizeof line - 1; ++j)
 			if (bytes[j] >= 32 && bytes[j] <= 126)
 				line[pos++] = bytes[j];

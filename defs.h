@@ -8,7 +8,7 @@
 #undef TRUE
 #endif
 
-#define APP_NAME "πFish"
+#define APP_NAME "mochiWM"
 
 #define FALSE 0
 #define TRUE 1

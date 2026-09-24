@@ -14,6 +14,6 @@ typedef struct {
 	int status;
 } Session;
 
-extern Session fish;
+extern Session mochi;
 
 #endif /* SESSION_H */

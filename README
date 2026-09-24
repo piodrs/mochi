@@ -1,4 +1,4 @@
-πFish
+mochiWM
 
 Minimal X11 window manager in C. Ratpoison-inspired frames, Emacs-inspired keys
 
@@ -35,7 +35,7 @@ Backspace deletes a character. C-u clears the prompt
 
 Configuration
 
-Edit ~/.fishrc. Defaults work without this file
+Edit ~/.mochirc. Defaults work without this file
 
 prefix C-t
 

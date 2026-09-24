@@ -24,7 +24,7 @@
 
 #define WM_RUNNING -1
 
-Session fish;
+Session mochi;
 
 volatile sig_atomic_t stopped;
 
@@ -35,39 +35,39 @@ void stop(int sig)
 
 int wm_split(int vertical)
 {
-	if (!frame_split(fish.frame, vertical)) {
+	if (!frame_split(mochi.frame, vertical)) {
 		input_message("Cannot split this frame");
 		return FALSE;
 	}
-	fish.frame = fish.frame->first;
+	mochi.frame = mochi.frame->first;
 	client_refresh();
 	return TRUE;
 }
 
 void wm_frame(int direction)
 {
-	fish.frame = frame_next(fish.tree, fish.frame, direction);
+	mochi.frame = frame_next(mochi.tree, mochi.frame, direction);
 	client_refresh();
-	input_message(fish.frame->win ? "Selected frame" : "Empty frame");
+	input_message(mochi.frame->win ? "Selected frame" : "Empty frame");
 }
 
 int wm_remove(void)
 {
-	fish.frame = frame_remove(&fish.tree, fish.frame);
+	mochi.frame = frame_remove(&mochi.tree, mochi.frame);
 	client_refresh();
 	return TRUE;
 }
 
 int wm_only(void)
 {
-	frame_only(&fish.tree, fish.frame);
+	frame_only(&mochi.tree, mochi.frame);
 	client_refresh();
 	return TRUE;
 }
 
 void wm_quit(int restart)
 {
-	fish.status = restart ? WM_RESTART : 0;
+	mochi.status = restart ? WM_RESTART : 0;
 }
 
 int wm_run(void)
@@ -79,18 +79,18 @@ int wm_run(void)
 	int status;
 	int count;
 
-	fish.status = 1;
+	mochi.status = 1;
 	if (!x11_open())
 		return 1;
-	fish.tree = frame_create();
-	if (!fish.tree || !display_init()) {
+	mochi.tree = frame_create();
+	if (!mochi.tree || !display_init()) {
 		fprintf(stderr, APP_NAME ": initialization failed\n");
 		goto close_display;
 	}
-	fish.frame = fish.tree;
-	if (!XGetWindowAttributes(fish.display, fish.root, &attr))
+	mochi.frame = mochi.tree;
+	if (!XGetWindowAttributes(mochi.display, mochi.root, &attr))
 		goto free_display;
-	frame_layout(fish.tree, 0, 0, attr.width, attr.height);
+	frame_layout(mochi.tree, 0, 0, attr.width, attr.height);
 	memset(&action, 0, sizeof action);
 	sigemptyset(&action.sa_mask);
 	action.sa_handler = stop;
@@ -102,38 +102,38 @@ int wm_run(void)
 		perror(APP_NAME ": signals");
 		goto free_display;
 	}
-	fish.status = WM_RUNNING;
+	mochi.status = WM_RUNNING;
 	client_scan();
-	if (fish.status != WM_RUNNING)
+	if (mochi.status != WM_RUNNING)
 		goto free_clients;
 	client_refresh();
 	status = keys_init();
 	if (!config_load(TRUE) && !status) {
 		fprintf(stderr, APP_NAME ": cannot grab prefix key\n");
-		fish.status = 1;
+		mochi.status = 1;
 	}
-	fd.fd = ConnectionNumber(fish.display);
+	fd.fd = ConnectionNumber(mochi.display);
 	fd.events = POLLIN;
-	while (fish.status == WM_RUNNING && !stopped) {
+	while (mochi.status == WM_RUNNING && !stopped) {
 		count = 0;
-		while (fish.status == WM_RUNNING && !stopped &&
-		       count++ < EVENT_BATCH && XPending(fish.display)) {
-			XNextEvent(fish.display, &event);
+		while (mochi.status == WM_RUNNING && !stopped &&
+		       count++ < EVENT_BATCH && XPending(mochi.display)) {
+			XNextEvent(mochi.display, &event);
 			event_dispatch(&event);
 		}
 		process_reap();
 		input_tick();
-		XFlush(fish.display);
-		if (fish.status != WM_RUNNING || stopped)
+		XFlush(mochi.display);
+		if (mochi.status != WM_RUNNING || stopped)
 			break;
-		status = poll(&fd, 1, XPending(fish.display) ? 0 : POLL_MS);
+		status = poll(&fd, 1, XPending(mochi.display) ? 0 : POLL_MS);
 		if (status < 0 && errno != EINTR) {
-			fish.status = 1;
+			mochi.status = 1;
 			break;
 		}
 		if (status > 0 &&
 		    (fd.revents & (POLLERR | POLLHUP | POLLNVAL))) {
-			fish.status = 1;
+			mochi.status = 1;
 			break;
 		}
 	}
@@ -143,13 +143,13 @@ free_clients:
 	keys_free();
 	client_free();
 	process_free();
-	XSetInputFocus(fish.display, PointerRoot, RevertToPointerRoot,
+	XSetInputFocus(mochi.display, PointerRoot, RevertToPointerRoot,
 		       CurrentTime);
 
 free_display:
 	display_free();
 close_display:
-	frame_free(fish.tree);
-	XCloseDisplay(fish.display);
-	return fish.status == WM_RUNNING ? 0 : fish.status;
+	frame_free(mochi.tree);
+	XCloseDisplay(mochi.display);
+	return mochi.status == WM_RUNNING ? 0 : mochi.status;
 }

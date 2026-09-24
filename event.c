@@ -24,7 +24,7 @@ void event_dispatch(XEvent *event)
 		client_destroy(event->xdestroywindow.window);
 		break;
 	case KeyPress:
-		fish.time = event->xkey.time;
+		mochi.time = event->xkey.time;
 		input_key(&event->xkey);
 		break;
 	case Expose:
@@ -36,9 +36,9 @@ void event_dispatch(XEvent *event)
 		keys_refresh();
 		break;
 	case ConfigureNotify:
-		if (event->xconfigure.window == fish.root) {
-			fish.tree->width = event->xconfigure.width;
-			fish.tree->height = event->xconfigure.height;
+		if (event->xconfigure.window == mochi.root) {
+			mochi.tree->width = event->xconfigure.width;
+			mochi.tree->height = event->xconfigure.height;
 			client_refresh();
 		}
 		break;

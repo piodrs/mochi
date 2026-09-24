@@ -154,10 +154,10 @@ int config_load(int startup)
 	if (!path) {
 		home = getenv("HOME");
 		if (!home || !*home)
-			return report("~/.fishrc", 0, "HOME is not set");
-		if (strlen(home) > sizeof name - sizeof "/.fishrc")
-			return report("~/.fishrc", 0, "path too long");
-		sprintf(name, "%s/.fishrc", home);
+			return report("~/.mochirc", 0, "HOME is not set");
+		if (strlen(home) > sizeof name - sizeof "/.mochirc")
+			return report("~/.mochirc", 0, "path too long");
+		sprintf(name, "%s/.mochirc", home);
 		path = name;
 	}
 	file = fopen(path, "r");

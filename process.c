@@ -61,7 +61,7 @@ int process_spawn(const char *command)
 		return FALSE;
 	}
 	if (!pid) {
-		close(ConnectionNumber(fish.display));
+		close(ConnectionNumber(mochi.display));
 		memset(&action, 0, sizeof action);
 		sigemptyset(&action.sa_mask);
 		action.sa_handler = SIG_DFL;

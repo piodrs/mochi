@@ -55,13 +55,13 @@ void properties(Client *cp)
 	int count;
 	int i;
 
-	hints = XGetWMHints(fish.display, cp->win);
+	hints = XGetWMHints(mochi.display, cp->win);
 	cp->input = !hints || !(hints->flags & InputHint) || hints->input;
 	if (hints)
 		XFree(hints);
 	cp->take_focus = FALSE;
 	cp->delete_window = FALSE;
-	if (XGetWMProtocols(fish.display, cp->win, &list, &count)) {
+	if (XGetWMProtocols(mochi.display, cp->win, &list, &count)) {
 		for (i = 0; i < count; ++i) {
 			if (list[i] == take_focus)
 				cp->take_focus = TRUE;
@@ -77,7 +77,7 @@ Frame *client_frame(Client *cp)
 	Frame *fp;
 
 	while (cp) {
-		fp = frame_find(fish.tree, cp->win);
+		fp = frame_find(mochi.tree, cp->win);
 		if (fp)
 			return fp;
 		cp = client_find(cp->transient);
@@ -90,9 +90,9 @@ Client *focused(void)
 	Client *cp;
 	Client *selected;
 
-	selected = client_find(fish.frame->win);
+	selected = client_find(mochi.frame->win);
 	for (cp = clients; cp; cp = cp->next)
-		if (cp->transient && client_frame(cp) == fish.frame)
+		if (cp->transient && client_frame(cp) == mochi.frame)
 			selected = cp;
 	return selected;
 }
@@ -115,10 +115,10 @@ void configure(Client *cp, Frame *fp)
 	}
 	x = fp->x + (fp->width - w) / 2;
 	y = fp->y + (fp->height - h) / 2;
-	XMoveResizeWindow(fish.display, cp->win, x, y, w, h);
+	XMoveResizeWindow(mochi.display, cp->win, x, y, w, h);
 	memset(&event, 0, sizeof event);
 	event.xconfigure.type = ConfigureNotify;
-	event.xconfigure.display = fish.display;
+	event.xconfigure.display = mochi.display;
 	event.xconfigure.event = cp->win;
 	event.xconfigure.window = cp->win;
 	event.xconfigure.x = x;
@@ -126,7 +126,7 @@ void configure(Client *cp, Frame *fp)
 	event.xconfigure.width = w;
 	event.xconfigure.height = h;
 	event.xconfigure.above = None;
-	XSendEvent(fish.display, cp->win, False, StructureNotifyMask, &event);
+	XSendEvent(mochi.display, cp->win, False, StructureNotifyMask, &event);
 }
 
 void client_refresh(void)
@@ -135,36 +135,36 @@ void client_refresh(void)
 	Client *selected;
 	Frame *fp;
 
-	frame_layout(fish.tree, 0, 0, fish.tree->width, fish.tree->height);
+	frame_layout(mochi.tree, 0, 0, mochi.tree->width, mochi.tree->height);
 	for (cp = clients; cp; cp = cp->next) {
 		fp = client_frame(cp);
 		if (fp) {
 			configure(cp, fp);
 			if (!cp->mapped) {
-				XMapWindow(fish.display, cp->win);
+				XMapWindow(mochi.display, cp->win);
 				cp->mapped = TRUE;
 				x11_state(cp->win, NormalState);
 			}
 		} else if (cp->mapped) {
 			++cp->pending;
-			XUnmapWindow(fish.display, cp->win);
+			XUnmapWindow(mochi.display, cp->win);
 			cp->mapped = FALSE;
 			x11_state(cp->win, IconicState);
 		}
 	}
 	selected = focused();
-	fish.time = x11_time(display_window());
-	XSetInputFocus(fish.display,
-		       selected && selected->input ? selected->win : fish.root,
-		       RevertToPointerRoot, fish.time);
+	mochi.time = x11_time(display_window());
+	XSetInputFocus(mochi.display,
+		       selected && selected->input ? selected->win : mochi.root,
+		       RevertToPointerRoot, mochi.time);
 	if (selected) {
-		XRaiseWindow(fish.display, selected->win);
+		XRaiseWindow(mochi.display, selected->win);
 		if (selected->take_focus)
 			x11_protocol(selected->win, take_focus);
 	}
 	input_draw();
-	XRaiseWindow(fish.display, display_window());
-	XFlush(fish.display);
+	XRaiseWindow(mochi.display, display_window());
+	XFlush(mochi.display);
 }
 
 void show(Client *cp)
@@ -174,11 +174,11 @@ void show(Client *cp)
 
 	while ((parent = client_find(cp->transient)) != NULL)
 		cp = parent;
-	fp = frame_find(fish.tree, cp->win);
+	fp = frame_find(mochi.tree, cp->win);
 	if (fp)
-		fish.frame = fp;
+		mochi.frame = fp;
 	else
-		fish.frame->win = cp->win;
+		mochi.frame->win = cp->win;
 }
 
 void manage(Window win, int select)
@@ -189,13 +189,13 @@ void manage(Window win, int select)
 
 	if (win == display_window() || client_find(win))
 		return;
-	if (!XGetWindowAttributes(fish.display, win, &attr) ||
+	if (!XGetWindowAttributes(mochi.display, win, &attr) ||
 	    attr.override_redirect || attr.class == InputOnly)
 		return;
 	cp = calloc(1, sizeof *cp);
 	if (!cp) {
 		fprintf(stderr, APP_NAME ": out of memory\n");
-		fish.status = 1;
+		mochi.status = 1;
 		return;
 	}
 	cp->win = win;
@@ -204,19 +204,19 @@ void manage(Window win, int select)
 	cp->border = attr.border_width;
 	cp->width = attr.width;
 	cp->height = attr.height;
-	XGetTransientForHint(fish.display, win, &cp->transient);
+	XGetTransientForHint(mochi.display, win, &cp->transient);
 	if (!client_find(cp->transient))
 		cp->transient = None;
 	properties(cp);
 	for (tail = &clients; *tail; tail = &(*tail)->next)
 		;
 	*tail = cp;
-	XAddToSaveSet(fish.display, win);
-	XSelectInput(fish.display, win, PropertyChangeMask);
-	XSetWindowBorderWidth(fish.display, win, 0);
+	XAddToSaveSet(mochi.display, win);
+	XSelectInput(mochi.display, win, PropertyChangeMask);
+	XSetWindowBorderWidth(mochi.display, win, 0);
 	x11_state(cp->win, cp->mapped ? NormalState : IconicState);
-	if (!cp->transient && (select || !fish.frame->win))
-		fish.frame->win = win;
+	if (!cp->transient && (select || !mochi.frame->win))
+		mochi.frame->win = win;
 	else if (cp->transient && select)
 		show(cp);
 }
@@ -227,7 +227,7 @@ void forget(Client *cp, int destroyed)
 	Client *other;
 	Frame *fp;
 
-	fp = frame_find(fish.tree, cp->win);
+	fp = frame_find(mochi.tree, cp->win);
 	if (fp)
 		fp->win = None;
 	for (link = &clients; *link != cp; link = &(*link)->next)
@@ -237,9 +237,9 @@ void forget(Client *cp, int destroyed)
 		if (other->transient == cp->win)
 			other->transient = None;
 	if (!destroyed) {
-		XSetWindowBorderWidth(fish.display, cp->win, cp->border);
-		XRemoveFromSaveSet(fish.display, cp->win);
-		XSelectInput(fish.display, cp->win, NoEventMask);
+		XSetWindowBorderWidth(mochi.display, cp->win, cp->border);
+		XRemoveFromSaveSet(mochi.display, cp->win);
+		XSelectInput(mochi.display, cp->win, NoEventMask);
 		x11_state(cp->win, WithdrawnState);
 	}
 	free(cp);
@@ -260,7 +260,7 @@ void client_next(int direction)
 
 	if (!clients)
 		return;
-	selected = client_find(fish.frame->win);
+	selected = client_find(mochi.frame->win);
 	previous = NULL;
 	for (cp = clients; cp; cp = cp->next) {
 		if (cp == selected)
@@ -295,7 +295,7 @@ int client_close(void)
 	if (cp->delete_window)
 		x11_protocol(cp->win, delete_window);
 	else
-		XKillClient(fish.display, cp->win);
+		XKillClient(mochi.display, cp->win);
 	return TRUE;
 }
 
@@ -336,7 +336,7 @@ int client_list(void)
 	text[0] = '\0';
 	for (cp = clients; cp; cp = cp->next) {
 		name = NULL;
-		XFetchName(fish.display, cp->win, &name);
+		XFetchName(mochi.display, cp->win, &name);
 		sprintf(number, "%lu", cp->id);
 		if (strlen(number) + 5 > sizeof text - pos) {
 			if (name)
@@ -381,7 +381,7 @@ void client_configure(XConfigureRequestEvent *event)
 	changes.border_width = event->border_width;
 	changes.sibling = event->above;
 	changes.stack_mode = event->detail;
-	XConfigureWindow(fish.display, event->window, event->value_mask,
+	XConfigureWindow(mochi.display, event->window, event->value_mask,
 			 &changes);
 }
 
@@ -425,7 +425,7 @@ void client_message(XClientMessageEvent *event)
 
 	if (!x11_iconic(event))
 		return;
-	fp = frame_find(fish.tree, event->window);
+	fp = frame_find(mochi.tree, event->window);
 	if (fp) {
 		fp->win = None;
 		client_refresh();
@@ -441,14 +441,14 @@ void client_scan(void)
 	unsigned int i;
 	XWindowAttributes attr;
 
-	client_protocols = XInternAtom(fish.display, "WM_PROTOCOLS", False);
-	take_focus = XInternAtom(fish.display, "WM_TAKE_FOCUS", False);
-	delete_window = XInternAtom(fish.display, "WM_DELETE_WINDOW", False);
-	if (!XQueryTree(fish.display, fish.root, &rw, &parent, &children,
+	client_protocols = XInternAtom(mochi.display, "WM_PROTOCOLS", False);
+	take_focus = XInternAtom(mochi.display, "WM_TAKE_FOCUS", False);
+	delete_window = XInternAtom(mochi.display, "WM_DELETE_WINDOW", False);
+	if (!XQueryTree(mochi.display, mochi.root, &rw, &parent, &children,
 			&count))
 		return;
 	for (i = 0; i < count; ++i)
-		if (XGetWindowAttributes(fish.display, children[i], &attr) &&
+		if (XGetWindowAttributes(mochi.display, children[i], &attr) &&
 		    (attr.map_state == IsViewable || x11_hidden(children[i])))
 			manage(children[i], FALSE);
 	XFree(children);
@@ -461,10 +461,10 @@ void client_free(void)
 	while (clients) {
 		cp = clients;
 		clients = cp->next;
-		XSetWindowBorderWidth(fish.display, cp->win, cp->border);
-		XMapWindow(fish.display, cp->win);
+		XSetWindowBorderWidth(mochi.display, cp->win, cp->border);
+		XMapWindow(mochi.display, cp->win);
 		x11_state(cp->win, NormalState);
-		XRemoveFromSaveSet(fish.display, cp->win);
+		XRemoveFromSaveSet(mochi.display, cp->win);
 		free(cp);
 	}
 }
