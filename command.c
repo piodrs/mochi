@@ -15,58 +15,58 @@ typedef struct {
 	int (*run)(void);
 } Command;
 
-int split_horizontal(void)
+int command_split_horizontal(void)
 {
 	return wm_split(FALSE);
 }
 
-int split_vertical(void)
+int command_split_vertical(void)
 {
 	return wm_split(TRUE);
 }
 
-int next_frame(void)
+int command_next_frame(void)
 {
 	wm_frame(1);
 	return TRUE;
 }
 
-int previous_frame(void)
+int command_previous_frame(void)
 {
 	wm_frame(-1);
 	return TRUE;
 }
 
-int next_window(void)
+int command_next_window(void)
 {
 	client_next(1);
 	return TRUE;
 }
 
-int previous_window(void)
+int command_previous_window(void)
 {
 	client_next(-1);
 	return TRUE;
 }
 
-int quit(void)
+int command_quit(void)
 {
 	wm_quit(FALSE);
 	return TRUE;
 }
 
-int restart(void)
+int command_restart(void)
 {
 	wm_quit(TRUE);
 	return TRUE;
 }
 
-int prompt(void)
+int command_prompt(void)
 {
 	return input_prompt("");
 }
 
-int reload(void)
+int command_reload(void)
 {
 	return config_load(FALSE);
 }
@@ -74,27 +74,27 @@ int reload(void)
 const Command commands[] = {
 	{
 		"split-horizontal",
-		split_horizontal,
+		command_split_horizontal,
 	},
 	{
 		"split-vertical",
-		split_vertical,
+		command_split_vertical,
 	},
 	{
 		"next-frame",
-		next_frame,
+		command_next_frame,
 	},
 	{
 		"previous-frame",
-		previous_frame,
+		command_previous_frame,
 	},
 	{
 		"next-window",
-		next_window,
+		command_next_window,
 	},
 	{
 		"previous-window",
-		previous_window,
+		command_previous_window,
 	},
 	{
 		"delete-frame",
@@ -114,15 +114,15 @@ const Command commands[] = {
 	},
 	{
 		"quit",
-		quit,
+		command_quit,
 	},
 	{
 		"restart",
-		restart,
+		command_restart,
 	},
 	{
 		"command",
-		prompt,
+		command_prompt,
 	},
 	{
 		"help",
@@ -130,11 +130,11 @@ const Command commands[] = {
 	},
 	{
 		"reload-config",
-		reload,
+		command_reload,
 	},
 };
 
-char *split(char *line)
+char *command_split(char *line)
 {
 	char *arg;
 	char *end;
@@ -172,7 +172,7 @@ int command_valid(const char *text)
 	if (strlen(text) >= sizeof line)
 		return FALSE;
 	strcpy(line, text);
-	arg = split(line);
+	arg = command_split(line);
 	if (!strcmp(line, "exec") || !strcmp(line, "select"))
 		return TRUE;
 	return !*arg && command_find(line) != NULL;
@@ -193,7 +193,7 @@ int command_run(const char *text)
 		return FALSE;
 	}
 	strcpy(line, text);
-	arg = split(line);
+	arg = command_split(line);
 	if (!strcmp(line, "exec"))
 		return *arg ? process_spawn(arg) : input_prompt("exec ");
 	if (!strcmp(line, "select"))

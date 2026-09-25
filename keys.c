@@ -168,7 +168,7 @@ void keys_defaults(Keymap *map)
 	}
 }
 
-void update_locks(void)
+void keys_update_locks(void)
 {
 	XModifierKeymap *map;
 	KeyCode num;
@@ -188,7 +188,7 @@ void update_locks(void)
 	XFreeModifiermap(map);
 }
 
-int grab(Key key)
+int keys_grab(Key key)
 {
 	KeyCode code;
 	unsigned int shift;
@@ -218,12 +218,12 @@ int keys_install(const Keymap *map)
 
 	XGrabServer(mochi.display);
 	XUngrabKey(mochi.display, AnyKey, AnyModifier, mochi.root);
-	ok = grab(map->prefix);
+	ok = keys_grab(map->prefix);
 	if (ok) {
 		active = *map;
 	} else {
 		XUngrabKey(mochi.display, AnyKey, AnyModifier, mochi.root);
-		if (active.prefix.sym && !grab(active.prefix)) {
+		if (active.prefix.sym && !keys_grab(active.prefix)) {
 			XUngrabKey(mochi.display, AnyKey, AnyModifier,
 				   mochi.root);
 			mochi.status = 1;
@@ -236,9 +236,9 @@ int keys_install(const Keymap *map)
 
 int keys_init(void)
 {
-	update_locks();
+	keys_update_locks();
 	keys_defaults(&active);
-	if (grab(active.prefix))
+	if (keys_grab(active.prefix))
 		return TRUE;
 	keys_free();
 	return FALSE;
@@ -251,7 +251,7 @@ void keys_free(void)
 
 void keys_refresh(void)
 {
-	update_locks();
+	keys_update_locks();
 	if (!keys_install(&active))
 		input_message(
 			"Cannot grab prefix after keyboard mapping change");

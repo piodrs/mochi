@@ -26,7 +26,7 @@ struct Process {
 
 Process *head;
 
-void failure(const char *command, int status)
+void process_failure(const char *command, int status)
 {
 	char message[MESSAGE_MAX];
 
@@ -101,7 +101,7 @@ void process_reap(void)
 		*link = pp->next;
 		if (WIFSIGNALED(status) ||
 		    (WIFEXITED(status) && WEXITSTATUS(status)))
-			failure(pp->command, status);
+			process_failure(pp->command, status);
 		free(pp);
 	}
 }

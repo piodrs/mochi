@@ -28,7 +28,7 @@ Session mochi;
 
 volatile sig_atomic_t stopped;
 
-void stop(int sig)
+void wm_stop(int sig)
 {
 	stopped = sig;
 }
@@ -93,7 +93,7 @@ int wm_run(void)
 	frame_layout(mochi.tree, 0, 0, attr.width, attr.height);
 	memset(&action, 0, sizeof action);
 	sigemptyset(&action.sa_mask);
-	action.sa_handler = stop;
+	action.sa_handler = wm_stop;
 	status = sigaction(SIGTERM, &action, NULL) < 0 ||
 		 sigaction(SIGINT, &action, NULL) < 0 ||
 		 sigaction(SIGHUP, &action, NULL) < 0;

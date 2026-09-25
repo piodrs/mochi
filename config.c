@@ -27,29 +27,29 @@ void config_path(const char *path)
 	filename = path;
 }
 
-char *skip(char *text)
+char *config_skip(char *text)
 {
 	while (*text == ' ' || *text == '\t' || *text == '\r')
 		++text;
 	return text;
 }
 
-char *word(char **rest)
+char *config_word(char **rest)
 {
 	char *start;
 	char *end;
 
-	start = skip(*rest);
+	start = *rest;
 	end = start;
 	while (*end && *end != ' ' && *end != '\t' && *end != '\r')
 		++end;
 	if (*end)
 		*end++ = '\0';
-	*rest = skip(end);
+	*rest = config_skip(end);
 	return start;
 }
 
-const char *parse(Config *cfg, char *line)
+const char *config_parse(Config *cfg, char *line)
 {
 	char *op;
 	char *arg;
@@ -59,10 +59,10 @@ const char *parse(Config *cfg, char *line)
 	len = strlen(line);
 	if (len && line[len - 1] == '\r')
 		line[len - 1] = '\0';
-	line = skip(line);
+	line = config_skip(line);
 	if (!*line || *line == '#')
 		return NULL;
-	op = word(&line);
+	op = config_word(&line);
 	if (!strcmp(op, "exec")) {
 		if (!*line)
 			return "exec requires a program";
@@ -73,11 +73,11 @@ const char *parse(Config *cfg, char *line)
 	}
 	if (strcmp(op, "prefix") && strcmp(op, "bind") && strcmp(op, "unbind"))
 		return "expected prefix, bind, unbind or exec";
-	arg = word(&line);
+	arg = config_word(&line);
 	if (!keys_parse(arg, &key))
 		return "invalid key (C-g and Escape are reserved for cancel)";
 	if (!strcmp(op, "bind")) {
-		if (!*line || !command_valid(line))
+		if (!command_valid(line))
 			return "invalid command in binding";
 		if (!keys_bind(&cfg->keys, key, line))
 			return "too many bindings";
@@ -96,7 +96,7 @@ const char *parse(Config *cfg, char *line)
 	return NULL;
 }
 
-const char *read_config(FILE *file, Config *cfg, unsigned long *number)
+const char *config_read(FILE *file, Config *cfg, unsigned long *number)
 {
 	char line[COMMAND_MAX];
 	const char *error;
@@ -113,7 +113,7 @@ const char *read_config(FILE *file, Config *cfg, unsigned long *number)
 			continue;
 		}
 		line[len] = '\0';
-		error = parse(cfg, line);
+		error = config_parse(cfg, line);
 		if (error)
 			return error;
 		len = 0;
@@ -124,10 +124,10 @@ const char *read_config(FILE *file, Config *cfg, unsigned long *number)
 	if (ferror(file))
 		return "cannot read configuration";
 	line[len] = '\0';
-	return parse(cfg, line);
+	return config_parse(cfg, line);
 }
 
-int report(const char *path, unsigned long line, const char *error)
+int config_report(const char *path, unsigned long line, const char *error)
 {
 	char text[MESSAGE_MAX];
 
@@ -154,35 +154,35 @@ int config_load(int startup)
 	if (!path) {
 		home = getenv("HOME");
 		if (!home || !*home)
-			return report("~/.mochirc", 0, "HOME is not set");
+			return config_report("~/.mochirc", 0, "HOME is not set");
 		if (strlen(home) > sizeof name - sizeof "/.mochirc")
-			return report("~/.mochirc", 0, "path too long");
+			return config_report("~/.mochirc", 0, "path too long");
 		sprintf(name, "%s/.mochirc", home);
 		path = name;
 	}
 	file = fopen(path, "r");
 	if (!file && (errno != ENOENT || filename))
-		return report(path, 0, strerror(errno));
+		return config_report(path, 0, strerror(errno));
 	cfg = calloc(1, sizeof *cfg);
 	if (!cfg) {
 		if (file)
 			fclose(file);
-		return report(path, 0, "out of memory");
+		return config_report(path, 0, "out of memory");
 	}
 	keys_defaults(&cfg->keys);
 	number = 0;
 	error = NULL;
 	if (file) {
-		error = read_config(file, cfg, &number);
+		error = config_read(file, cfg, &number);
 		if (fclose(file) && !error)
 			error = "cannot close configuration";
 	}
 	ok = FALSE;
 	if (error)
-		report(path, number, error);
+		config_report(path, number, error);
 	else if (!keys_install(&cfg->keys))
-		report(path, 0,
-		       "prefix unavailable; previous bindings retained");
+		config_report(path, 0,
+			      "prefix unavailable; previous bindings retained");
 	else {
 		ok = TRUE;
 		sprintf(text, "Prefix %s", keys_name());

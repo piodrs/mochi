@@ -9,7 +9,6 @@
 #include "session.h"
 #include "x11.h"
 
-#define BAR_HEIGHT 24
 #define LINE_HEIGHT 16
 #define TEXT_PAD 4
 
@@ -30,7 +29,8 @@ int display_init(void)
 	attr.background_pixel = BlackPixel(mochi.display, screen);
 	attr.event_mask = ExposureMask | PropertyChangeMask;
 	x11_trap();
-	bar = XCreateWindow(mochi.display, mochi.root, 0, 0, 1, BAR_HEIGHT, 0,
+	bar = XCreateWindow(mochi.display, mochi.root, 0, 0, 1,
+			    LINE_HEIGHT + TEXT_PAD * 2, 0,
 			    CopyFromParent, InputOutput, CopyFromParent,
 			    CWOverrideRedirect | CWBackPixel | CWEventMask,
 			    &attr);
@@ -68,7 +68,7 @@ Window display_window(void)
 	return bar;
 }
 
-int row_length(const char *text, int n, int cols)
+int display_row_length(const char *text, int n, int cols)
 {
 	int count;
 
@@ -93,13 +93,9 @@ void display_draw(const char *text, int tail)
 	int x;
 	int y;
 	int remaining;
-	size_t len;
 
 	start = text;
-	len = strlen(start);
-	if (len > MESSAGE_MAX)
-		len = MESSAGE_MAX;
-	n = len;
+	n = strlen(start);
 	w = mochi.frame->width > 0 ? mochi.frame->width : 1;
 	x = mochi.frame->x;
 	y = mochi.frame->y;
@@ -125,7 +121,7 @@ void display_draw(const char *text, int tail)
 	remaining = n;
 	rows = 0;
 	do {
-		count = row_length(scan, remaining, cols);
+		count = display_row_length(scan, remaining, cols);
 		if (count < remaining && scan[count] == '\n')
 			++count;
 		scan += count;
@@ -136,7 +132,7 @@ void display_draw(const char *text, int tail)
 			  rows * LINE_HEIGHT + TEXT_PAD * 2);
 	XClearWindow(mochi.display, bar);
 	for (row = 0; row < rows; ++row) {
-		count = row_length(start, n, cols);
+		count = display_row_length(start, n, cols);
 		XDrawString(mochi.display, bar, gc, TEXT_PAD,
 			    row * LINE_HEIGHT + LINE_HEIGHT, start, count);
 		if (count < n && start[count] == '\n')

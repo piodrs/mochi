@@ -48,7 +48,7 @@ Client *client_find(Window win)
 	return NULL;
 }
 
-void properties(Client *cp)
+void client_properties(Client *cp)
 {
 	XWMHints *hints;
 	Atom *list;
@@ -85,7 +85,7 @@ Frame *client_frame(Client *cp)
 	return NULL;
 }
 
-Client *focused(void)
+Client *client_focused(void)
 {
 	Client *cp;
 	Client *selected;
@@ -97,7 +97,7 @@ Client *focused(void)
 	return selected;
 }
 
-void configure(Client *cp, Frame *fp)
+void client_resize(Client *cp, Frame *fp)
 {
 	XEvent event;
 	int x;
@@ -139,7 +139,7 @@ void client_refresh(void)
 	for (cp = clients; cp; cp = cp->next) {
 		fp = client_frame(cp);
 		if (fp) {
-			configure(cp, fp);
+			client_resize(cp, fp);
 			if (!cp->mapped) {
 				XMapWindow(mochi.display, cp->win);
 				cp->mapped = TRUE;
@@ -152,7 +152,7 @@ void client_refresh(void)
 			x11_state(cp->win, IconicState);
 		}
 	}
-	selected = focused();
+	selected = client_focused();
 	mochi.time = x11_time(display_window());
 	XSetInputFocus(mochi.display,
 		       selected && selected->input ? selected->win : mochi.root,
@@ -167,7 +167,7 @@ void client_refresh(void)
 	XFlush(mochi.display);
 }
 
-void show(Client *cp)
+void client_show(Client *cp)
 {
 	Frame *fp;
 	Client *parent;
@@ -181,13 +181,13 @@ void show(Client *cp)
 		mochi.frame->win = cp->win;
 }
 
-void manage(Window win, int select)
+void client_manage(Window win, int select)
 {
 	XWindowAttributes attr;
 	Client *cp;
 	Client **tail;
 
-	if (win == display_window() || client_find(win))
+	if (win == display_window())
 		return;
 	if (!XGetWindowAttributes(mochi.display, win, &attr) ||
 	    attr.override_redirect || attr.class == InputOnly)
@@ -207,7 +207,7 @@ void manage(Window win, int select)
 	XGetTransientForHint(mochi.display, win, &cp->transient);
 	if (!client_find(cp->transient))
 		cp->transient = None;
-	properties(cp);
+	client_properties(cp);
 	for (tail = &clients; *tail; tail = &(*tail)->next)
 		;
 	*tail = cp;
@@ -218,10 +218,10 @@ void manage(Window win, int select)
 	if (!cp->transient && (select || !mochi.frame->win))
 		mochi.frame->win = win;
 	else if (cp->transient && select)
-		show(cp);
+		client_show(cp);
 }
 
-void forget(Client *cp, int destroyed)
+void client_forget(Client *cp, int destroyed)
 {
 	Client **link;
 	Client *other;
@@ -245,7 +245,8 @@ void forget(Client *cp, int destroyed)
 	free(cp);
 	if (fp)
 		for (other = clients; other; other = other->next)
-			if (!client_frame(other) && !other->transient) {
+			if (!other->transient &&
+			    !frame_find(mochi.tree, other->win)) {
 				fp->win = other->win;
 				break;
 			}
@@ -262,12 +263,9 @@ void client_next(int direction)
 		return;
 	selected = client_find(mochi.frame->win);
 	previous = NULL;
-	for (cp = clients; cp; cp = cp->next) {
-		if (cp == selected)
-			break;
+	for (cp = clients; cp && cp != selected; cp = cp->next)
 		if (!cp->transient)
 			previous = cp;
-	}
 	if (direction > 0) {
 		cp = cp ? cp->next : clients;
 		while (cp && cp->transient)
@@ -281,7 +279,7 @@ void client_next(int direction)
 					previous = cp;
 		cp = previous;
 	}
-	show(cp);
+	client_show(cp);
 	client_refresh();
 }
 
@@ -289,7 +287,7 @@ int client_close(void)
 {
 	Client *cp;
 
-	cp = focused();
+	cp = client_focused();
 	if (!cp)
 		return FALSE;
 	if (cp->delete_window)
@@ -313,7 +311,7 @@ int client_select(const char *arg)
 	}
 	for (cp = clients; cp; cp = cp->next)
 		if (cp->id == id) {
-			show(cp);
+			client_show(cp);
 			client_refresh();
 			return TRUE;
 		}
@@ -331,7 +329,7 @@ int client_list(void)
 	size_t pos;
 	int available;
 
-	selected = focused();
+	selected = client_focused();
 	pos = 0;
 	text[0] = '\0';
 	for (cp = clients; cp; cp = cp->next) {
@@ -371,7 +369,7 @@ void client_configure(XConfigureRequestEvent *event)
 		}
 		fp = client_frame(cp);
 		if (fp)
-			configure(cp, fp);
+			client_resize(cp, fp);
 		return;
 	}
 	changes.x = event->x;
@@ -391,9 +389,9 @@ void client_map(Window win)
 
 	cp = client_find(win);
 	if (cp)
-		show(cp);
+		client_show(cp);
 	else
-		manage(win, TRUE);
+		client_manage(win, TRUE);
 	client_refresh();
 }
 
@@ -407,7 +405,7 @@ void client_unmap(XUnmapEvent *event)
 	if (cp->pending && !event->send_event)
 		--cp->pending;
 	else
-		forget(cp, FALSE);
+		client_forget(cp, FALSE);
 }
 
 void client_destroy(Window win)
@@ -416,7 +414,7 @@ void client_destroy(Window win)
 
 	cp = client_find(win);
 	if (cp)
-		forget(cp, TRUE);
+		client_forget(cp, TRUE);
 }
 
 void client_message(XClientMessageEvent *event)
@@ -450,7 +448,7 @@ void client_scan(void)
 	for (i = 0; i < count; ++i)
 		if (XGetWindowAttributes(mochi.display, children[i], &attr) &&
 		    (attr.map_state == IsViewable || x11_hidden(children[i])))
-			manage(children[i], FALSE);
+			client_manage(children[i], FALSE);
 	XFree(children);
 }
 
@@ -477,5 +475,5 @@ void client_property(XPropertyEvent *event)
 		return;
 	cp = client_find(event->window);
 	if (cp)
-		properties(cp);
+		client_properties(cp);
 }

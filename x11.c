@@ -16,7 +16,7 @@ Atom wm_state;
 Atom change_state;
 Atom timestamp;
 
-int xerror(Display *display, XErrorEvent *event)
+int x11_error(Display *display, XErrorEvent *event)
 {
 	char text[256];
 
@@ -55,7 +55,7 @@ int x11_open(void)
 		return FALSE;
 	}
 	mochi.root = DefaultRootWindow(mochi.display);
-	XSetErrorHandler(xerror);
+	XSetErrorHandler(x11_error);
 	x11_trap();
 	XSelectInput(mochi.display, mochi.root,
 		     SubstructureRedirectMask | SubstructureNotifyMask |

@@ -61,13 +61,6 @@ int frame_split(Frame *fp, int vertical)
 	return TRUE;
 }
 
-Frame *frame_first(Frame *fp)
-{
-	while (fp->first)
-		fp = fp->first;
-	return fp;
-}
-
 Frame *frame_next(Frame *root, Frame *fp, int direction)
 {
 	Frame *pp;
@@ -107,7 +100,9 @@ Frame *frame_remove(Frame **root, Frame *fp)
 		gp->second = sp;
 	free(fp);
 	free(pp);
-	return frame_first(sp);
+	while (sp->first)
+		sp = sp->first;
+	return sp;
 }
 
 Frame *frame_find(Frame *fp, unsigned long win)
