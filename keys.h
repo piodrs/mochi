@@ -1,14 +1,14 @@
 #ifndef KEYS_H
 #define KEYS_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #include <X11/Xlib.h>
 
 #include "defs.h"
 
-#define KEY_NAME_MAX 64
-#define BINDING_MAX 128
+enum { KEY_NAME_MAX = 64, BINDING_MAX = 128 };
 
 typedef struct {
 	KeySym sym;
@@ -27,18 +27,18 @@ typedef struct {
 	size_t count;
 } Keymap;
 
-int keys_parse(const char *text, Key *key);
+bool keys_parse(const char *text, Key *key);
 void keys_defaults(Keymap *map);
-int keys_bind(Keymap *map, Key key, const char *command);
+bool keys_bind(Keymap *map, Key key, const char *command);
 void keys_unbind(Keymap *map, Key key);
-int keys_install(const Keymap *map);
-int keys_init(void);
+bool keys_install(const Keymap *map);
+bool keys_init(void);
 void keys_free(void);
 void keys_refresh(void);
-int keys_prefix(KeySym sym, unsigned int mask);
+bool keys_prefix(KeySym sym, unsigned int mask);
 unsigned int keys_locks(void);
 const char *keys_lookup(KeySym sym, unsigned int mask);
 const char *keys_name(void);
-int keys_help(void);
+void keys_help(void);
 
 #endif /* KEYS_H */

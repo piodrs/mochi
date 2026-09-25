@@ -3,13 +3,13 @@
 
 #include <X11/Xlib.h>
 
-#include "frame.h"
+struct Frame;
 
 typedef struct {
 	Display *display;
 	Window root;
-	Frame *tree;
-	Frame *frame;
+	struct Frame *tree;
+	struct Frame *frame;
 	Time time;
 	int status;
 } Session;

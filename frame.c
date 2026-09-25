@@ -1,138 +1,124 @@
+#include "frame.h"
+
 #include <stdlib.h>
 
 #include "defs.h"
-#include "frame.h"
 
 Frame *frame_create(void)
 {
 	return calloc(1, sizeof(Frame));
 }
 
-void frame_free(Frame *fp)
+void frame_free(Frame *frame)
 {
-	if (!fp)
+	if (!frame)
 		return;
-	frame_free(fp->first);
-	frame_free(fp->second);
-	free(fp);
+	frame_free(frame->first);
+	frame_free(frame->second);
+	free(frame);
 }
 
-void frame_layout(Frame *fp, int x, int y, int width, int height)
+void frame_layout(Frame *frame, int x, int y, int width, int height)
 {
-	int n;
-
-	fp->x = x;
-	fp->y = y;
-	fp->width = width;
-	fp->height = height;
-	if (!fp->first)
+	frame->x = x;
+	frame->y = y;
+	frame->width = width;
+	frame->height = height;
+	if (!frame->first)
 		return;
-	n = fp->vertical ? width / 2 : height / 2;
-	if (fp->vertical) {
-		frame_layout(fp->first, x, y, n, height);
-		frame_layout(fp->second, x + n, y, width - n, height);
+	int first_size = frame->vertical ? width / 2 : height / 2;
+	if (frame->vertical) {
+		frame_layout(frame->first, x, y, first_size, height);
+		frame_layout(frame->second, x + first_size, y, width - first_size, height);
 	} else {
-		frame_layout(fp->first, x, y, width, n);
-		frame_layout(fp->second, x, y + n, width, height - n);
+		frame_layout(frame->first, x, y, width, first_size);
+		frame_layout(frame->second, x, y + first_size, width, height - first_size);
 	}
 }
 
-int frame_split(Frame *fp, int vertical)
+bool frame_split(Frame *frame, bool vertical)
 {
-	Frame *a;
-	Frame *b;
-
-	if (fp->first || (vertical ? fp->width : fp->height) < FRAME_MIN * 2)
-		return FALSE;
-	a = frame_create();
-	b = frame_create();
-	if (!a || !b) {
-		free(a);
-		free(b);
-		return FALSE;
+	if (frame->first || (vertical ? frame->width : frame->height) < FRAME_MIN * 2)
+		return false;
+	Frame *first = frame_create();
+	Frame *second = frame_create();
+	if (!first || !second) {
+		free(first);
+		free(second);
+		return false;
 	}
-	a->parent = fp;
-	b->parent = fp;
-	a->win = fp->win;
-	fp->win = 0;
-	fp->first = a;
-	fp->second = b;
-	fp->vertical = vertical;
-	return TRUE;
+	first->parent = frame;
+	second->parent = frame;
+	first->win = frame->win;
+	frame->win = 0;
+	frame->first = first;
+	frame->second = second;
+	frame->vertical = vertical;
+	return true;
 }
 
-Frame *frame_next(Frame *root, Frame *fp, int direction)
+Frame *frame_next(Frame *root, Frame *frame, int direction)
 {
-	Frame *pp;
-
-	pp = fp->parent;
-	while (pp && fp == (direction > 0 ? pp->second : pp->first)) {
-		fp = pp;
-		pp = pp->parent;
+	Frame *parent = frame->parent;
+	while (parent && frame == (direction > 0 ? parent->second : parent->first)) {
+		frame = parent;
+		parent = parent->parent;
 	}
-	fp = pp ? (direction > 0 ? pp->second : pp->first) : root;
-	while (fp->first)
-		fp = direction > 0 ? fp->first : fp->second;
-	return fp;
+	frame = parent ? (direction > 0 ? parent->second : parent->first) : root;
+	while (frame->first)
+		frame = direction > 0 ? frame->first : frame->second;
+	return frame;
 }
 
-Frame *frame_remove(Frame **root, Frame *fp)
+Frame *frame_remove(Frame **root, Frame *frame)
 {
-	Frame *pp;
-	Frame *sp;
-	Frame *gp;
-
-	pp = fp->parent;
-	if (!pp)
-		return fp;
-	sp = pp->first == fp ? pp->second : pp->first;
-	gp = pp->parent;
-	sp->parent = gp;
-	sp->x = pp->x;
-	sp->y = pp->y;
-	sp->width = pp->width;
-	sp->height = pp->height;
-	if (!gp)
-		*root = sp;
-	else if (gp->first == pp)
-		gp->first = sp;
+	Frame *parent = frame->parent;
+	if (!parent)
+		return frame;
+	Frame *sibling = parent->first == frame ? parent->second : parent->first;
+	Frame *grandparent = parent->parent;
+	sibling->parent = grandparent;
+	sibling->x = parent->x;
+	sibling->y = parent->y;
+	sibling->width = parent->width;
+	sibling->height = parent->height;
+	if (!grandparent)
+		*root = sibling;
+	else if (grandparent->first == parent)
+		grandparent->first = sibling;
 	else
-		gp->second = sp;
-	free(fp);
-	free(pp);
-	while (sp->first)
-		sp = sp->first;
-	return sp;
+		grandparent->second = sibling;
+	free(frame);
+	free(parent);
+	while (sibling->first)
+		sibling = sibling->first;
+	return sibling;
 }
 
-Frame *frame_find(Frame *fp, unsigned long win)
+Frame *frame_find(Frame *frame, unsigned long win)
 {
-	Frame *found;
-
 	if (!win)
 		return NULL;
-	if (!fp->first)
-		return fp->win == win ? fp : NULL;
-	found = frame_find(fp->first, win);
-	return found ? found : frame_find(fp->second, win);
+	if (!frame->first)
+		return frame->win == win ? frame : NULL;
+	Frame *found = frame_find(frame->first, win);
+	return found ? found : frame_find(frame->second, win);
 }
 
-void frame_only(Frame **root, Frame *fp)
+void frame_only(Frame **root, Frame *frame)
 {
-	Frame *pp;
-
-	pp = fp->parent;
-	if (!pp)
+	Frame *parent = frame->parent;
+	if (!parent)
 		return;
-	if (pp->first == fp)
-		pp->first = NULL;
+	if (parent->first == frame)
+		parent->first = NULL;
 	else
-		pp->second = NULL;
-	fp->x = (*root)->x;
-	fp->y = (*root)->y;
-	fp->width = (*root)->width;
-	fp->height = (*root)->height;
+		parent->second = NULL;
+	frame->x = (*root)->x;
+	frame->y = (*root)->y;
+	frame->width = (*root)->width;
+	frame->height = (*root)->height;
 	frame_free(*root);
-	fp->parent = NULL;
-	*root = fp;
+	frame->parent = NULL;
+	*root = frame;
 }

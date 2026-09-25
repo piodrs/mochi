@@ -1,8 +1,9 @@
+#include "event.h"
+
 #include <X11/Xlib.h>
 
 #include "client.h"
 #include "display.h"
-#include "event.h"
 #include "frame.h"
 #include "input.h"
 #include "keys.h"

@@ -1,3 +1,5 @@
+#include "input.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -9,62 +11,59 @@
 #include "command.h"
 #include "defs.h"
 #include "display.h"
-#include "input.h"
 #include "keys.h"
 #include "session.h"
 
-#define INPUT_IDLE 0
-#define INPUT_PREFIX 1
-#define INPUT_PROMPT 2
-#define MESSAGE_SECONDS 5
+enum InputMode { INPUT_IDLE, INPUT_PREFIX, INPUT_PROMPT };
+enum { MESSAGE_SECONDS = 5 };
 
-int mode;
-char line[COMMAND_MAX];
-char message[MESSAGE_MAX];
-size_t pos;
-time_t expires;
+static enum InputMode mode;
+static char line[COMMAND_MAX];
+static char message[MESSAGE_MAX];
+static size_t pos;
+static time_t expires;
 
 void input_draw(void)
 {
 	char text[MESSAGE_MAX];
 
 	if (mode == INPUT_PROMPT)
-		sprintf(text, "M-x %s_", line);
+		snprintf(text, sizeof text, "M-x %s_", line);
 	else if (mode == INPUT_PREFIX)
-		sprintf(text, "%s  (C-g cancel)", keys_name());
+		snprintf(text, sizeof text, "%s  (C-g cancel)", keys_name());
 	else {
-		display_draw(message, FALSE);
+		display_draw(message, false);
 		return;
 	}
-	display_draw(text, TRUE);
+	display_draw(text, true);
 }
 
 void input_message(const char *text)
 {
-	sprintf(message, "%.*s", MESSAGE_MAX - 1, text);
+	snprintf(message, sizeof message, "%s", text);
 	expires = time(NULL) + MESSAGE_SECONDS;
 	display_show();
 	input_draw();
 }
 
-int input_prompt(const char *text)
+bool input_prompt(const char *text)
 {
-	if (XGrabKeyboard(mochi.display, mochi.root, False, GrabModeAsync,
-			  GrabModeAsync, CurrentTime) != GrabSuccess) {
+	if (XGrabKeyboard(mochi.display, mochi.root, False, GrabModeAsync, GrabModeAsync,
+		    CurrentTime) != GrabSuccess) {
 		input_message("Cannot grab keyboard");
-		return FALSE;
+		return false;
 	}
 	mode = INPUT_PROMPT;
-	sprintf(line, "%.*s", COMMAND_MAX - 1, text);
+	snprintf(line, sizeof line, "%s", text);
 	pos = strlen(line);
 	display_show();
 	input_draw();
-	return TRUE;
+	return true;
 }
 
 void input_tick(void)
 {
-	if (!mode && expires && time(NULL) >= expires) {
+	if (mode == INPUT_IDLE && expires && time(NULL) >= expires) {
 		display_hide();
 		expires = 0;
 	}
@@ -79,25 +78,20 @@ void input_cancel(void)
 	display_hide();
 }
 
-void input_key(XKeyEvent *event)
+void input_key(const XKeyEvent *event)
 {
 	KeySym key;
 	char bytes[32];
-	unsigned int mask;
-	const char *binding;
-	int n;
-	int j;
-	XKeyEvent clean;
 
-	clean = *event;
+	XKeyEvent clean = *event;
 	clean.state &= ~keys_locks();
-	n = XLookupString(&clean, bytes, sizeof bytes, &key, NULL);
-	mask = event->state & (ControlMask | Mod1Mask | Mod4Mask);
-	if (!mode) {
+	int n = XLookupString(&clean, bytes, sizeof bytes, &key, NULL);
+	unsigned int mask = event->state & (ControlMask | Mod1Mask | Mod4Mask);
+	if (mode == INPUT_IDLE) {
 		if (!keys_prefix(key, mask))
 			return;
-		if (XGrabKeyboard(mochi.display, mochi.root, False, GrabModeAsync,
-				  GrabModeAsync, event->time) != GrabSuccess)
+		if (XGrabKeyboard(mochi.display, mochi.root, False, GrabModeAsync, GrabModeAsync,
+			    event->time) != GrabSuccess)
 			return;
 		mode = INPUT_PREFIX;
 		display_show();
@@ -106,14 +100,13 @@ void input_key(XKeyEvent *event)
 	}
 	if (IsModifierKey(key))
 		return;
-	if (key == XK_Escape ||
-	    ((key == XK_g || key == XK_G) && mask == ControlMask)) {
+	if (key == XK_Escape || ((key == XK_g || key == XK_G) && mask == ControlMask)) {
 		input_cancel();
 		return;
 	}
 	if (mode == INPUT_PREFIX) {
 		input_cancel();
-		binding = keys_lookup(key, mask);
+		const char *binding = keys_lookup(key, mask);
 		if (binding) {
 			if (!command_run(binding))
 				XBell(mochi.display, 0);
@@ -137,7 +130,7 @@ void input_key(XKeyEvent *event)
 	} else if (!mask) {
 		if (n > 0 && pos == sizeof line - 1)
 			XBell(mochi.display, 0);
-		for (j = 0; j < n && pos < sizeof line - 1; ++j)
+		for (int j = 0; j < n && pos < sizeof line - 1; ++j)
 			if (bytes[j] >= 32 && bytes[j] <= 126)
 				line[pos++] = bytes[j];
 		line[pos] = '\0';

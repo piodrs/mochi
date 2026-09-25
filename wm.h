@@ -1,13 +1,15 @@
 #ifndef WM_H
 #define WM_H
 
-#define WM_RESTART 2
+#include <stdbool.h>
+
+enum { WM_RESTART = 2 };
 
 int wm_run(void);
-int wm_split(int vertical);
+bool wm_split(bool vertical);
 void wm_frame(int direction);
-int wm_remove(void);
-int wm_only(void);
-void wm_quit(int restart);
+void wm_remove(void);
+void wm_only(void);
+void wm_quit(bool restart);
 
 #endif /* WM_H */

@@ -2,6 +2,8 @@ mochiWM
 
 Minimal X11 window manager in C. Ratpoison-inspired frames, Emacs-inspired keys
 
+Requires a C99 compiler, POSIX interfaces and Xlib development files
+
 Keys
 
 Press C-t, release it, then press a key below

@@ -1,8 +1,9 @@
+#include "command.h"
+
 #include <stddef.h>
 #include <string.h>
 
 #include "client.h"
-#include "command.h"
 #include "config.h"
 #include "defs.h"
 #include "input.h"
@@ -10,198 +11,149 @@
 #include "process.h"
 #include "wm.h"
 
+typedef enum {
+	COMMAND_SPLIT_HORIZONTAL,
+	COMMAND_SPLIT_VERTICAL,
+	COMMAND_NEXT_FRAME,
+	COMMAND_PREVIOUS_FRAME,
+	COMMAND_NEXT_WINDOW,
+	COMMAND_PREVIOUS_WINDOW,
+	COMMAND_DELETE_FRAME,
+	COMMAND_ONLY_FRAME,
+	COMMAND_CLOSE,
+	COMMAND_WINDOWS,
+	COMMAND_QUIT,
+	COMMAND_RESTART,
+	COMMAND_PROMPT,
+	COMMAND_HELP,
+	COMMAND_RELOAD,
+} CommandAction;
+
 typedef struct {
 	const char *name;
-	int (*run)(void);
+	CommandAction action;
 } Command;
 
-int command_split_horizontal(void)
-{
-	return wm_split(FALSE);
-}
-
-int command_split_vertical(void)
-{
-	return wm_split(TRUE);
-}
-
-int command_next_frame(void)
-{
-	wm_frame(1);
-	return TRUE;
-}
-
-int command_previous_frame(void)
-{
-	wm_frame(-1);
-	return TRUE;
-}
-
-int command_next_window(void)
-{
-	client_next(1);
-	return TRUE;
-}
-
-int command_previous_window(void)
-{
-	client_next(-1);
-	return TRUE;
-}
-
-int command_quit(void)
-{
-	wm_quit(FALSE);
-	return TRUE;
-}
-
-int command_restart(void)
-{
-	wm_quit(TRUE);
-	return TRUE;
-}
-
-int command_prompt(void)
-{
-	return input_prompt("");
-}
-
-int command_reload(void)
-{
-	return config_load(FALSE);
-}
-
-const Command commands[] = {
-	{
-		"split-horizontal",
-		command_split_horizontal,
-	},
-	{
-		"split-vertical",
-		command_split_vertical,
-	},
-	{
-		"next-frame",
-		command_next_frame,
-	},
-	{
-		"previous-frame",
-		command_previous_frame,
-	},
-	{
-		"next-window",
-		command_next_window,
-	},
-	{
-		"previous-window",
-		command_previous_window,
-	},
-	{
-		"delete-frame",
-		wm_remove,
-	},
-	{
-		"only-frame",
-		wm_only,
-	},
-	{
-		"close",
-		client_close,
-	},
-	{
-		"windows",
-		client_list,
-	},
-	{
-		"quit",
-		command_quit,
-	},
-	{
-		"restart",
-		command_restart,
-	},
-	{
-		"command",
-		command_prompt,
-	},
-	{
-		"help",
-		keys_help,
-	},
-	{
-		"reload-config",
-		command_reload,
-	},
+static const Command commands[] = {
+	{"split-horizontal", COMMAND_SPLIT_HORIZONTAL},
+	{"split-vertical", COMMAND_SPLIT_VERTICAL},
+	{"next-frame", COMMAND_NEXT_FRAME},
+	{"previous-frame", COMMAND_PREVIOUS_FRAME},
+	{"next-window", COMMAND_NEXT_WINDOW},
+	{"previous-window", COMMAND_PREVIOUS_WINDOW},
+	{"delete-frame", COMMAND_DELETE_FRAME},
+	{"only-frame", COMMAND_ONLY_FRAME},
+	{"close", COMMAND_CLOSE},
+	{"windows", COMMAND_WINDOWS},
+	{"quit", COMMAND_QUIT},
+	{"restart", COMMAND_RESTART},
+	{"command", COMMAND_PROMPT},
+	{"help", COMMAND_HELP},
+	{"reload-config", COMMAND_RELOAD},
 };
 
-char *command_split(char *line)
+static char *command_split(char *line)
 {
-	char *arg;
-	char *end;
-
-	arg = line;
+	char *arg = line;
 	while (*arg && *arg != ' ' && *arg != '\t')
 		++arg;
 	if (*arg)
 		*arg++ = '\0';
 	while (*arg == ' ' || *arg == '\t')
 		++arg;
-	end = arg + strlen(arg);
+	char *end = arg + strlen(arg);
 	while (end > arg && (end[-1] == ' ' || end[-1] == '\t'))
 		*--end = '\0';
 	return arg;
 }
 
-const Command *command_find(const char *name)
+static const Command *command_find(const char *name)
 {
-	size_t i;
-
-	for (i = 0; i < ARRAY_SIZE(commands); ++i)
+	for (size_t i = 0; i < ARRAY_SIZE(commands); ++i)
 		if (!strcmp(name, commands[i].name))
 			return &commands[i];
 	return NULL;
 }
 
-int command_valid(const char *text)
+bool command_valid(const char *text)
 {
 	char line[COMMAND_MAX];
-	char *arg;
 
 	while (*text == ' ' || *text == '\t')
 		++text;
 	if (strlen(text) >= sizeof line)
-		return FALSE;
+		return false;
 	strcpy(line, text);
-	arg = command_split(line);
+	char *arg = command_split(line);
 	if (!strcmp(line, "exec") || !strcmp(line, "select"))
-		return TRUE;
+		return true;
 	return !*arg && command_find(line) != NULL;
 }
 
-int command_run(const char *text)
+bool command_run(const char *text)
 {
 	char line[COMMAND_MAX];
-	char *arg;
-	const Command *cp;
 
 	while (*text == ' ' || *text == '\t')
 		++text;
 	if (!*text)
-		return TRUE;
+		return true;
 	if (strlen(text) >= sizeof line) {
 		input_message("Command too long");
-		return FALSE;
+		return false;
 	}
 	strcpy(line, text);
-	arg = command_split(line);
+	char *arg = command_split(line);
 	if (!strcmp(line, "exec"))
 		return *arg ? process_spawn(arg) : input_prompt("exec ");
 	if (!strcmp(line, "select"))
 		return *arg ? client_select(arg) : input_prompt("select ");
-	cp = command_find(line);
-	if (!cp || *arg) {
+	const Command *command = command_find(line);
+	if (!command || *arg) {
 		input_message("Unknown command or invalid arguments");
-		return FALSE;
+		return false;
 	}
-	return cp->run();
+	switch (command->action) {
+	case COMMAND_SPLIT_HORIZONTAL:
+		return wm_split(false);
+	case COMMAND_SPLIT_VERTICAL:
+		return wm_split(true);
+	case COMMAND_NEXT_FRAME:
+		wm_frame(1);
+		break;
+	case COMMAND_PREVIOUS_FRAME:
+		wm_frame(-1);
+		break;
+	case COMMAND_NEXT_WINDOW:
+		client_next(1);
+		break;
+	case COMMAND_PREVIOUS_WINDOW:
+		client_next(-1);
+		break;
+	case COMMAND_DELETE_FRAME:
+		wm_remove();
+		break;
+	case COMMAND_ONLY_FRAME:
+		wm_only();
+		break;
+	case COMMAND_CLOSE:
+		return client_close();
+	case COMMAND_WINDOWS:
+		client_list();
+		break;
+	case COMMAND_QUIT:
+		wm_quit(false);
+		break;
+	case COMMAND_RESTART:
+		wm_quit(true);
+		break;
+	case COMMAND_PROMPT:
+		return input_prompt("");
+	case COMMAND_HELP:
+		keys_help();
+		break;
+	case COMMAND_RELOAD:
+		return config_load(false);
+	}
+	return true;
 }

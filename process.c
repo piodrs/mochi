@@ -1,11 +1,12 @@
 #define _POSIX_C_SOURCE 200809L
 
+#include "process.h"
+
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -13,7 +14,6 @@
 
 #include "defs.h"
 #include "input.h"
-#include "process.h"
 #include "session.h"
 
 typedef struct Process Process;
@@ -24,95 +24,85 @@ struct Process {
 	char command[COMMAND_MAX];
 };
 
-Process *head;
+static Process *processes;
 
-void process_failure(const char *command, int status)
+static void process_failure(const char *command, int status)
 {
 	char message[MESSAGE_MAX];
 
 	if (WIFSIGNALED(status))
-		sprintf(message, "Program killed by signal %d: %s",
+		snprintf(message, sizeof message, "Program killed by signal %d: %s",
 			WTERMSIG(status), command);
 	else
-		sprintf(message, "Program exited with status %d: %s",
+		snprintf(message, sizeof message, "Program exited with status %d: %s",
 			WEXITSTATUS(status), command);
 	fprintf(stderr, APP_NAME ": %s\n", message);
 	input_message(message);
 }
 
-int process_spawn(const char *command)
+bool process_spawn(const char *command)
 {
-	Process *pp;
-	pid_t pid;
-	struct sigaction action;
-	sigset_t mask;
-
 	if (!*command || strlen(command) >= COMMAND_MAX)
-		return FALSE;
-	pp = malloc(sizeof *pp);
-	if (!pp) {
+		return false;
+	Process *process = malloc(sizeof *process);
+	if (!process) {
 		input_message("Cannot allocate program entry");
-		return FALSE;
+		return false;
 	}
-	pid = fork();
+	pid_t pid = fork();
 	if (pid < 0) {
-		free(pp);
+		free(process);
 		input_message("Cannot start program");
-		return FALSE;
+		return false;
 	}
 	if (!pid) {
+		struct sigaction action = {.sa_handler = SIG_DFL};
+		sigset_t mask;
+
 		close(ConnectionNumber(mochi.display));
-		memset(&action, 0, sizeof action);
 		sigemptyset(&action.sa_mask);
-		action.sa_handler = SIG_DFL;
 		sigemptyset(&mask);
-		if (sigaction(SIGCHLD, &action, NULL) < 0 ||
-		    sigaction(SIGINT, &action, NULL) < 0 ||
-		    sigaction(SIGTERM, &action, NULL) < 0 ||
-		    sigaction(SIGHUP, &action, NULL) < 0 ||
-		    sigaction(SIGPIPE, &action, NULL) < 0 ||
-		    sigprocmask(SIG_SETMASK, &mask, NULL) < 0 || setsid() < 0)
+		if (sigaction(SIGCHLD, &action, NULL) < 0 || sigaction(SIGINT, &action, NULL) < 0 ||
+			sigaction(SIGTERM, &action, NULL) < 0 ||
+			sigaction(SIGHUP, &action, NULL) < 0 ||
+			sigaction(SIGPIPE, &action, NULL) < 0 ||
+			sigprocmask(SIG_SETMASK, &mask, NULL) < 0 || setsid() < 0)
 			_exit(126);
 		execl("/bin/sh", "sh", "-c", command, (char *)NULL);
 		_exit(127);
 	}
 
-	pp->pid = pid;
-	strcpy(pp->command, command);
-	pp->next = head;
-	head = pp;
-	return TRUE;
+	process->pid = pid;
+	strcpy(process->command, command);
+	process->next = processes;
+	processes = process;
+	return true;
 }
 
 void process_reap(void)
 {
-	Process **link;
-	Process *pp;
 	pid_t pid;
 	int status;
 
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-		for (link = &head; *link && (*link)->pid != pid;
-		     link = &(*link)->next)
+		Process **link;
+		for (link = &processes; *link && (*link)->pid != pid; link = &(*link)->next)
 			;
-		pp = *link;
-		if (!pp)
+		Process *process = *link;
+		if (!process)
 			continue;
-		*link = pp->next;
-		if (WIFSIGNALED(status) ||
-		    (WIFEXITED(status) && WEXITSTATUS(status)))
-			process_failure(pp->command, status);
-		free(pp);
+		*link = process->next;
+		if (WIFSIGNALED(status) || (WIFEXITED(status) && WEXITSTATUS(status)))
+			process_failure(process->command, status);
+		free(process);
 	}
 }
 
 void process_free(void)
 {
-	Process *pp;
-
-	while (head) {
-		pp = head;
-		head = pp->next;
-		free(pp);
+	while (processes) {
+		Process *process = processes;
+		processes = process->next;
+		free(process);
 	}
 }
